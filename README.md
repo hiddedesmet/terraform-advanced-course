@@ -1,8 +1,45 @@
-# Terraform Advanced Course Demo
+# Te## Architecture
 
-This Terraform project demonstrates Azure infrastructure deployment with multiple resources.
+This project deploys the following resources:
+- Resource Group
+- Virtual Network with Subnet
+- Network Security Group with rules for SSH and HTTP
+- Storage Account with Container
+- App Service Plan and Linux Web App
+- Key Vault
 
-## Resources Created
+## Modules
+
+The code is organized into the following modules:
+
+- **Network**: Virtual Network, Subnet, and Network Security Group
+- **Storage**: Storage Account and Container
+- **WebApp**: App Service Plan and Linux Web App
+- **KeyVault**: Key Vault
+- **Naming**: Resource naming convention
+
+## Directory Structure
+
+```
+terraform-advanced-course/
+├── backend.tf               # Backend configuration for Terraform state
+├── main.tf                  # Main Terraform configuration
+├── outputs.tf               # Output variables
+├── variables.tf             # Input variables
+├── environments/            # Environment-specific configurations
+│   ├── dev.tfvars           # Development environment variables
+│   └── prod.tfvars          # Production environment variables
+└── modules/                 # Terraform modules
+    ├── keyvault/            # Key Vault module
+    ├── naming/              # Naming convention module
+    ├── network/             # Network module
+    ├── storage/             # Storage module
+    └── webapp/              # Web App module
+```ed Project
+
+This repository contains Terraform code to deploy Azure infrastructure in a modular, maintainable way.
+
+## Architecture
 
 This project creates the following Azure resources:
 
@@ -15,60 +52,62 @@ This project creates the following Azure resources:
 - **Web App**: Node.js web application
 - **Key Vault**: Secure storage for secrets and keys
 
-## Variables
-
-All resource names are parameterized using variables for consistency and flexibility. You can customize the deployment by modifying the variables in `variables.tf`:
-
-### Core Variables:
-- `resource_group_name`: Name of the resource group
-- `location`: Azure region for deployment (default: westeurope)
-
-### Globally Unique Resource Names:
-- `storage_account_name`: Storage account name (must be globally unique)
-- `web_app_name`: Web app name (must be globally unique)
-- `key_vault_name`: Key Vault name (must be globally unique)
-
-### Other Resource Names:
-- `virtual_network_name`: Name of the virtual network
-- `subnet_name`: Name of the subnet
-- `nsg_name`: Name of the network security group
-- `storage_container_name`: Name of the storage container
-- `app_service_plan_name`: Name of the App Service Plan
-
 ## Usage
 
-1. Initialize Terraform:
-   ```bash
-   terraform init
-   ```
+### Initialize Terraform
 
-2. Plan the deployment:
-   ```bash
-   terraform plan
-   ```
+```bash
+terraform init
+```
 
-3. Apply the configuration:
-   ```bash
-   terraform apply
-   ```
+### Select Workspace (Environment)
 
-4. To destroy resources when done:
-   ```bash
-   terraform destroy
-   ```
+```bash
+# Create and switch to a new workspace
+terraform workspace new dev
+# Or switch to an existing workspace
+terraform workspace select dev
+```
 
-## Outputs
+### Plan and Apply
 
-After deployment, the following information will be displayed:
+```bash
+# For development environment
+terraform plan -var-file=environments/dev.tfvars
+terraform apply -var-file=environments/dev.tfvars
 
-- Resource Group ID
-- Virtual Network ID
-- Subnet ID
-- Storage Account details
-- Web App URL
-- Key Vault URI
-- Network Security Group ID
+# For production environment
+terraform workspace select prod
+terraform plan -var-file=environments/prod.tfvars
+terraform apply -var-file=environments/prod.tfvars
+```
 
-## Backend Configuration
+### Destroy
 
-This project uses Azure Storage as the backend for state management. The backend configuration is in `backend.tf`.
+```bash
+terraform destroy -var-file=environments/dev.tfvars
+```
+
+## Best Practices Implemented
+
+1. **Modular Structure**: Code is organized into reusable modules
+2. **Environment Separation**: Using workspaces and environment-specific variable files
+3. **Naming Conventions**: Consistent resource naming through the naming module
+4. **Resource Tagging**: All resources are tagged with environment, project, and management information
+5. **State Management**: Remote state stored in Azure Storage Account
+6. **Variable Defaults**: Sensible defaults for variables with option to override
+
+## Security Considerations
+
+1. HTTPS-only web app
+2. NSG rules limiting access
+3. Key Vault with RBAC authorization
+4. Private storage container
+
+## Considerations for Production Use
+
+1. Add more granular RBAC permissions
+2. Implement network isolation with private endpoints
+3. Add monitoring and diagnostics settings
+4. Implement backup policies
+5. Consider using Azure Policy for governance

@@ -1,3 +1,39 @@
+variable "prefix" {
+  description = "Prefix to be used in resource names"
+  type        = string
+  default     = "tf"
+}
+
+variable "environment" {
+  description = "Environment name (dev, test, prod, etc.)"
+  type        = string
+  default     = "dev"
+}
+
+variable "suffix" {
+  description = "Suffix to be used in resource names"
+  type        = string
+  default     = "01"
+}
+
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+  default     = "demo"
+}
+
+variable "owner" {
+  description = "Owner of the resources"
+  type        = string
+  default     = "DevOps Team"
+}
+
+variable "cost_center" {
+  description = "Cost center for billing"
+  type        = string
+  default     = "IT-12345"
+}
+
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
