@@ -44,7 +44,7 @@ module "naming" {
   environment  = local.environment
   suffix       = var.suffix
   project_name = var.project_name
-  tags         = {
+  tags = {
     Team = "DevOps"
   }
 }
@@ -60,7 +60,7 @@ module "tagging" {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name  # You can switch to module.naming.resource_group when ready
+  name     = var.resource_group_name # You can switch to module.naming.resource_group when ready
   location = var.location
 
   tags = module.tagging.tags
@@ -95,30 +95,30 @@ module "storage" {
 module "webapp" {
   source = "./modules/webapp"
 
-  resource_group_name     = azurerm_resource_group.rg.name
-  location                = azurerm_resource_group.rg.location
-  app_service_plan_name   = var.app_service_plan_name
-  web_app_name            = var.web_app_name
-  os_type                 = "Linux"
-  sku_name                = "B1"
-  https_only              = true
-  minimum_tls_version     = "1.2"
-  php_version             = "8.0"
-  app_settings            = {
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  app_service_plan_name = var.app_service_plan_name
+  web_app_name          = var.web_app_name
+  os_type               = "Linux"
+  sku_name              = "B1"
+  https_only            = true
+  minimum_tls_version   = "1.2"
+  php_version           = "8.0"
+  app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
   }
-  tags                    = module.tagging.tags
+  tags = module.tagging.tags
 }
 
 module "keyvault" {
   source = "./modules/keyvault"
 
-  resource_group_name         = azurerm_resource_group.rg.name
-  location                    = azurerm_resource_group.rg.location
-  key_vault_name              = var.key_vault_name
-  sku_name                    = "standard"
-  purge_protection_enabled    = false
-  soft_delete_retention_days  = 7
-  enable_rbac_authorization   = true
-  tags                        = module.tagging.tags
+  resource_group_name        = azurerm_resource_group.rg.name
+  location                   = azurerm_resource_group.rg.location
+  key_vault_name             = var.key_vault_name
+  sku_name                   = "standard"
+  purge_protection_enabled   = false
+  soft_delete_retention_days = 7
+  enable_rbac_authorization  = true
+  tags                       = module.tagging.tags
 }

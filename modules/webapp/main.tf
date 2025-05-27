@@ -17,7 +17,7 @@ resource "azurerm_linux_web_app" "web_app" {
 
   site_config {
     minimum_tls_version = var.minimum_tls_version
-    
+
     application_stack {
       php_version = var.php_version
     }

@@ -51,7 +51,24 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
 
     - name: Terraform Format Check
-      run: terraform fmt -check -recursive
+      id: fmt-check
+      run: |
+        if ! terraform fmt -check -recursive; then
+          echo "::error::Terraform formatting check failed. Run 'terraform fmt -recursive' locally to fix."
+          echo "::warning::On pull requests, we're automatically fixing the formatting in the next step."
+          exit 1
+        fi
+      continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+    - name: Terraform Format Fix (PR only)
+      if: github.event_name == 'pull_request' && steps.fmt-check.outcome == 'failure'
+      run: |
+        terraform fmt -recursive
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add -A
+        git commit -m "Automatically fix Terraform formatting"
+        git push
 
     - name: Terraform Init
       run: terraform init

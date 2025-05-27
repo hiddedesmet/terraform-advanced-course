@@ -11,7 +11,7 @@ locals {
     web_app                = "app"
     key_vault              = "kv"
   }
-  
+
   # Common tags that should be applied to all resources
   common_tags = merge(
     var.tags,

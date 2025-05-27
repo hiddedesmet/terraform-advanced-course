@@ -51,7 +51,7 @@ variable "php_version" {
 variable "app_settings" {
   description = "App settings for the web app"
   type        = map(string)
-  default     = {
+  default = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
   }
 }
