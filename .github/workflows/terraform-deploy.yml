@@ -35,6 +35,13 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  # Set working directory for all terraform commands
+  TERRAFORM_WORKING_DIR: '.'
+
+# Define defaults for all jobs
+defaults:
+  run:
+    working-directory: ${{ env.TERRAFORM_WORKING_DIR }}
 
 jobs:
   terraform-check:
@@ -99,7 +106,10 @@ jobs:
       run: terraform workspace select dev || terraform workspace new dev
 
     - name: Terraform Plan
-      run: terraform plan -var-file="environments/dev.tfvars" -out=tfplan-dev
+      run: |
+        echo "Running terraform plan with var file: environments/dev.tfvars"
+        ls -la environments/ # Debug: List environment directory contents
+        terraform plan -var-file="environments/dev.tfvars" -out=tfplan-dev
       
     - name: Upload Plan
       uses: actions/upload-artifact@v4
@@ -130,7 +140,10 @@ jobs:
       run: terraform workspace select prod || terraform workspace new prod
 
     - name: Terraform Plan
-      run: terraform plan -var-file="environments/prod.tfvars" -out=tfplan-prod
+      run: |
+        echo "Running terraform plan with var file: environments/prod.tfvars"
+        ls -la environments/ # Debug: List environment directory contents
+        terraform plan -var-file="environments/prod.tfvars" -out=tfplan-prod
       
     - name: Upload Plan
       uses: actions/upload-artifact@v4
@@ -224,4 +237,7 @@ jobs:
       run: terraform workspace select ${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -auto-approve -var-file="environments/${{ github.event.inputs.environment }}.tfvars"
+      run: |
+        echo "Running terraform destroy with var file: environments/${{ github.event.inputs.environment }}.tfvars"
+        ls -la environments/ # Debug: List environment directory contents
+        terraform destroy -auto-approve -var-file="environments/${{ github.event.inputs.environment }}.tfvars"
