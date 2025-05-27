@@ -37,3 +37,10 @@ resource "null_resource" "storage_account_name" {
     name = "${var.prefix}st${var.environment}${var.suffix}"
   }
 }
+
+# Special naming function for storage containers (lowercase only, hyphens allowed)
+resource "null_resource" "storage_container_name" {
+  triggers = {
+    name = lower("${var.prefix}-stcont-${var.environment}-${var.suffix}")
+  }
+}

@@ -56,7 +56,7 @@ module "tagging" {
   project_name      = var.project_name
   owner             = var.owner
   cost_center       = var.cost_center
-  terraform_version = "v${terraform.version}"
+  terraform_version = "v1.12"
 }
 
 resource "azurerm_resource_group" "rg" {

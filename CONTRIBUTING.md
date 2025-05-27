@@ -7,14 +7,48 @@ Thank you for your interest in contributing to our Terraform project! This docum
 1. [Code of Conduct](#code-of-conduct)
 2. [Getting Started](#getting-started)
 3. [Development Workflow](#development-workflow)
-4. [Coding Standards](#coding-standards)
-5. [Commit Message Guidelines](#commit-message-guidelines)
-6. [Pull Request Process](#pull-request-process)
-7. [Release Process](#release-process)
+4. [Testing Requirements](#testing-requirements)
+5. [Coding Standards](#coding-standards)
+6. [Commit Message Guidelines](#commit-message-guidelines)
+7. [Pull Request Process](#pull-request-process)
+8. [Release Process](#release-process)
 
 ## Code of Conduct
 
 This project adheres to a Code of Conduct that promotes a welcoming and inclusive environment. By participating, you are expected to uphold this code.
+
+## Testing Requirements
+
+This project uses Terratest for comprehensive infrastructure testing. All contributions should maintain test compatibility and, where applicable, include appropriate tests.
+
+### Running Tests
+
+```bash
+# Quick validation (recommended for development)
+make test
+
+# Complete test suite (use sparingly due to cost)
+make test-all
+
+# Specific test categories
+make test-validation         # Fast syntax and plan validation
+make test-modules           # Module-specific functionality tests
+make test-infrastructure    # Full deployment tests (incurs Azure costs)
+
+# Development helpers
+make setup                  # Initialize testing environment
+make fmt                    # Format test code
+make lint                   # Quality checks
+make clean                  # Clean test artifacts
+```
+
+### Test Guidelines
+
+1. **Always run validation tests** before submitting PRs
+2. **Module tests** should be run when modifying specific modules
+3. **Infrastructure tests** should be used sparingly due to cost implications
+4. **Format your test code** using `make fmt`
+5. **Ensure tests pass** in CI/CD pipeline before merging
 
 ## Getting Started
 
@@ -23,6 +57,8 @@ This project adheres to a Code of Conduct that promotes a welcoming and inclusiv
 - Terraform (v1.1.0 or newer)
 - Azure CLI
 - Git
+- Go (v1.21 or newer) for running tests
+- Make (for using standardized development workflows)
 
 ### Setup
 
@@ -37,7 +73,21 @@ This project adheres to a Code of Conduct that promotes a welcoming and inclusiv
    terraform init
    ```
 
-3. Create a workspace (if needed):
+3. Set up Go for testing:
+   ```bash
+   cd test/
+   go mod tidy
+   ```
+
+4. Configure Azure authentication:
+   ```bash
+   export ARM_CLIENT_ID="your-client-id"
+   export ARM_CLIENT_SECRET="your-client-secret"
+   export ARM_SUBSCRIPTION_ID="your-subscription-id"
+   export ARM_TENANT_ID="your-tenant-id"
+   ```
+
+5. Create a workspace (if needed):
    ```bash
    terraform workspace new dev
    ```
@@ -53,8 +103,15 @@ This project adheres to a Code of Conduct that promotes a welcoming and inclusiv
 
 3. Test your changes:
    ```bash
+   # Terraform validation
    terraform validate
    terraform plan -var-file=environments/dev.tfvars
+   
+   # Run automated tests
+   make test                    # Quick validation tests
+   make test-modules            # Module-specific tests
+   # Note: Avoid running infrastructure tests locally unless necessary
+   # as they deploy real resources and incur costs
    ```
 
 4. Update documentation (README.md, module READMEs) if necessary.

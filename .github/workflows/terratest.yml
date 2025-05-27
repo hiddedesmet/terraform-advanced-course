@@ -1,0 +1,224 @@
+name: 'Terratest'
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.tf'
+      - '**.go'
+      - 'test/**'
+      - '.github/workflows/terratest.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.tf'
+      - '**.go'
+      - 'test/**'
+      - '.github/workflows/terratest.yml'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'validation'
+        type: choice
+        options:
+          - validation
+          - modules
+          - infrastructure
+          - all
+
+env:
+  GO_VERSION: '1.21'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  setup:
+    name: 'Setup and Validation'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: test/vendor
+        key: ${{ runner.os }}-go-${{ hashFiles('test/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: |
+        cd test
+        go mod download
+
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+
+    - name: Terraform Init and Validate
+      run: |
+        terraform init
+        terraform validate
+
+  test-validation:
+    name: 'Validation Tests'
+    runs-on: ubuntu-latest
+    needs: setup
+    if: |
+      (github.event_name == 'push' || github.event_name == 'pull_request') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.test_type == 'validation' || github.event.inputs.test_type == 'all'))
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: test/vendor
+        key: ${{ runner.os }}-go-${{ hashFiles('test/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: |
+        cd test
+        go mod download
+
+    - name: Run Validation Tests
+      run: |
+        cd test
+        go test -v -run TestTerraformValidation -timeout 10m
+        go test -v -run TestTerraformPlan -timeout 10m
+        go test -v -run TestNamingConventions -timeout 10m
+        go test -v -run TestValidationModule -timeout 10m
+
+  test-modules:
+    name: 'Module Tests'
+    runs-on: ubuntu-latest
+    needs: setup
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.test_type == 'modules' || github.event.inputs.test_type == 'all')) ||
+      (github.ref == 'refs/heads/develop' && github.event_name == 'push')
+    strategy:
+      matrix:
+        module: [Network, Storage, WebApp, KeyVault]
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: test/vendor
+        key: ${{ runner.os }}-go-${{ hashFiles('test/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: |
+        cd test
+        go mod download
+
+    - name: Run ${{ matrix.module }} Module Test
+      run: |
+        cd test
+        go test -v -run Test${{ matrix.module }}Module -timeout 20m
+
+  test-infrastructure:
+    name: 'Infrastructure E2E Test'
+    runs-on: ubuntu-latest
+    needs: setup
+    if: |
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.test_type == 'infrastructure' || github.event.inputs.test_type == 'all')) ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'push')
+    environment: testing
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: test/vendor
+        key: ${{ runner.os }}-go-${{ hashFiles('test/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: |
+        cd test
+        go mod download
+
+    - name: Run Infrastructure Test
+      run: |
+        cd test
+        go test -v -run TestTerraformAdvancedInfrastructure -timeout 45m
+
+  report:
+    name: 'Test Report'
+    runs-on: ubuntu-latest
+    needs: [test-validation, test-modules, test-infrastructure]
+    if: always()
+    
+    steps:
+    - name: Test Results Summary
+      run: |
+        echo "## Terratest Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Validation Tests | ${{ needs.test-validation.result == 'success' && '✅ Passed' || needs.test-validation.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Module Tests | ${{ needs.test-modules.result == 'success' && '✅ Passed' || needs.test-modules.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Infrastructure Test | ${{ needs.test-infrastructure.result == 'success' && '✅ Passed' || needs.test-infrastructure.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY

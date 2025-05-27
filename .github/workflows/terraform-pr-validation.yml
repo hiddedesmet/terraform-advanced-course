@@ -1,0 +1,110 @@
+name: 'Terraform PR Validation'
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened]
+
+env:
+  TF_VERSION: '1.5.0'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  terraform-validate:
+    name: 'Terraform Validation'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Format Check
+      id: fmt
+      run: terraform fmt -check -recursive
+      continue-on-error: true
+
+    - name: Terraform Init
+      id: init
+      run: terraform init
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+
+    - name: Terraform Plan for Dev
+      id: plan-dev
+      run: |
+        terraform workspace select dev || terraform workspace new dev
+        terraform plan -var-file="environments/dev.tfvars" -no-color
+      continue-on-error: true
+
+    - name: Terraform Plan for Prod
+      id: plan-prod
+      if: github.base_ref == 'main'
+      run: |
+        terraform workspace select prod || terraform workspace new prod
+        terraform plan -var-file="environments/prod.tfvars" -no-color
+      continue-on-error: true
+
+    - name: Update Pull Request
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN_DEV: "terraform\n${{ steps.plan-dev.outputs.stdout }}"
+        PLAN_PROD: "terraform\n${{ steps.plan-prod.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+          <details><summary>Validation Output</summary>
+
+          \`\`\`\n
+          ${{ steps.validate.outputs.stdout }}
+          \`\`\`
+
+          </details>
+
+          #### Terraform Plan 📖\`${{ steps.plan-dev.outcome }}\`
+
+          <details><summary>Dev Environment Plan</summary>
+
+          \`\`\`\n
+          ${process.env.PLAN_DEV}
+          \`\`\`
+
+          </details>
+
+          ${github.base_ref === 'main' ? `
+          <details><summary>Prod Environment Plan</summary>
+
+          \`\`\`\n
+          ${process.env.PLAN_PROD}
+          \`\`\`
+
+          </details>
+          ` : ''}
+
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Terraform Plan Status
+      if: steps.plan-dev.outcome == 'failure'
+      run: exit 1

@@ -25,7 +25,7 @@ output "storage_account" {
 
 output "storage_container" {
   description = "Name for storage container"
-  value       = null_resource.resource_name.triggers.storage_container
+  value       = null_resource.storage_container_name.triggers.name
 }
 
 output "app_service_plan" {
