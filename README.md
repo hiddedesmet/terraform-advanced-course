@@ -36,12 +36,6 @@ terraform-advanced-course/
 │       ├── terraform-deploy.yml           # Main deployment workflow
 │       ├── terraform-pr-validation.yml    # PR validation workflow
 │       └── README.md        # Workflow documentation
-├── test/                    # Terratest infrastructure testing
-│   ├── go.mod               # Go module dependencies
-│   ├── go.sum               # Dependency checksums
-│   ├── terraform_validation_test.go       # Validation and plan tests
-│   ├── terraform_modules_test.go          # Module-specific tests
-│   └── terraform_infrastructure_test.go   # End-to-end infrastructure tests
 └── modules/                 # Terraform modules
     ├── keyvault/            # Key Vault module
     │   ├── main.tf
@@ -158,120 +152,6 @@ terraform apply -var-file=environments/prod.tfvars
 ```bash
 terraform destroy -var-file=environments/dev.tfvars
 ```
-
-## Testing
-
-This project includes comprehensive testing using Terratest, a Go-based testing framework for infrastructure code.
-
-### Test Categories
-
-1. **Validation Tests** (`test/terraform_validation_test.go`)
-   - Fast syntax and configuration validation
-   - Terraform plan generation testing
-   - Naming convention compliance testing
-   - **Runtime**: < 1 second
-
-2. **Module Tests** (`test/terraform_modules_test.go`)
-   - Individual module isolation testing
-   - Module input/output validation
-   - Module functionality verification
-   - **Runtime**: < 1 minute
-
-3. **Infrastructure Tests** (`test/terraform_infrastructure_test.go`)
-   - Full end-to-end deployment testing
-   - Real Azure resource creation and validation
-   - Resource connectivity and functionality testing
-   - **Runtime**: < 30 minutes
-
-### Running Tests
-
-#### Prerequisites
-1. **Go Installation** (version 1.21 or later):
-   ```bash
-   # macOS with Homebrew
-   brew install go
-   
-   # Verify installation
-   go version
-   ```
-
-2. **Azure Authentication**:
-   ```bash
-   export ARM_CLIENT_ID="your-client-id"
-   export ARM_CLIENT_SECRET="your-client-secret"
-   export ARM_SUBSCRIPTION_ID="your-subscription-id"
-   export ARM_TENANT_ID="your-tenant-id"
-   ```
-
-#### Test Execution
-
-```bash
-# Navigate to test directory
-cd test/
-
-# Initialize Go modules (first time only)
-go mod tidy
-
-# Using Makefile (Recommended)
-make help                   # Show all available targets
-make test                   # Run validation tests only (fastest)
-make test-all               # Run all test categories
-make test-validation        # Run validation and planning tests
-make test-modules           # Run individual module tests
-make test-infrastructure    # Run full infrastructure tests (includes cost warning)
-
-# Direct Go test execution
-go test -v -timeout 30m
-
-# Run specific test categories
-go test -v -run TestTerraformValidation    # Fast validation tests
-go test -v -run TestTerraformPlan         # Plan generation tests
-go test -v -run TestNamingConventions     # Naming convention tests
-go test -v -run TestValidationModule      # Module validation tests
-go test -v -run TestTerraformAdvanced     # Infrastructure tests
-
-# Development helpers
-make setup                  # Initialize Go module and dependencies
-make fmt                    # Format Go test code
-make lint                   # Run linting on test code
-make clean                  # Clean test cache
-```
-
-#### Test Structure
-```
-test/
-├── go.mod                           # Go module dependencies
-├── go.sum                           # Dependency checksums
-├── terraform_validation_test.go     # Validation and plan tests
-├── terraform_modules_test.go        # Module-specific tests
-└── terraform_infrastructure_test.go # End-to-end infrastructure tests
-```
-
-#### Makefile Integration
-The project includes a comprehensive Makefile for standardized development workflows:
-
-```bash
-make help                   # Show all available commands
-make test                   # Quick validation tests
-make test-all               # Complete test suite
-make test-validation        # Syntax and plan validation
-make test-modules           # Individual module testing
-make test-infrastructure    # Full deployment testing (with cost warning)
-make setup                  # Initialize development environment
-make fmt                    # Format Go code
-make lint                   # Code quality checks
-make clean                  # Clean test artifacts
-```
-
-### Continuous Integration
-
-Tests are automatically executed in GitHub Actions:
-- **Pull Request Validation**: Runs validation and module tests on every PR
-- **Branch Deployment**: Runs full test suite before deployment
-- **Scheduled Testing**: Daily infrastructure validation tests
-- **Makefile Integration**: Uses standardized Makefile targets for consistent execution across local and CI environments
-
-> **Note**: Current GitHub Actions workflow focuses on Terraform validation and planning. To add Terratest execution to CI/CD, consider enhancing the workflow with additional test steps that call `make test-validation` and `make test-modules` for cost-effective automated testing.
 
 ## Best Practices Implemented
 

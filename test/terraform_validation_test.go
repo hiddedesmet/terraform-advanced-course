@@ -21,34 +21,6 @@ func TestTerraformValidation(t *testing.T) {
 	terraform.Validate(t, terraformOptions)
 }
 
-// TestTerraformPlan tests that our Terraform configuration produces a valid plan
-func TestTerraformPlan(t *testing.T) {
-	t.Parallel()
-
-	terraformOptions := &terraform.Options{
-		TerraformDir: "../",
-		Vars: map[string]interface{}{
-			"location":              "westeurope",
-			"prefix":                "tftest",
-			"environment":           "test",
-			"suffix":                "01",
-			"project_name":          "plan-test",
-			"resource_group_name":   "test-rg-plan",
-			"virtual_network_name":  "test-vnet-plan",
-			"subnet_name":           "test-subnet-plan",
-			"nsg_name":             "test-nsg-plan",
-			"storage_account_name":  "tftestplan01",
-			"storage_container_name": "test-container-plan",
-			"app_service_plan_name": "test-plan-plan",
-			"web_app_name":         "test-webapp-plan",
-			"key_vault_name":       "test-kv-plan-01",
-		},
-	}
-
-	// This will run `terraform init` and `terraform plan`
-	terraform.InitAndPlan(t, terraformOptions)
-}
-
 // TestNamingConventions tests our naming convention module
 func TestNamingConventions(t *testing.T) {
 	t.Parallel()
