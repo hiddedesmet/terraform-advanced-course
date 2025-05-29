@@ -1,0 +1,94 @@
+name: 'Terraform Local Test'
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  terraform-format:
+    name: 'Terraform Format'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Terraform Format Check
+      id: fmt
+      run: terraform fmt -check -recursive
+
+  terraform-validate-modules:
+    name: 'Terraform Module Validation'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    # Test naming module - doesn't need Azure authentication
+    - name: Validate Naming Module
+      run: |
+        cd modules/naming
+        terraform init -backend=false
+        terraform validate
+        
+    # Test tagging module - doesn't need Azure authentication
+    - name: Validate Tagging Module
+      run: |
+        cd modules/tagging
+        terraform init -backend=false
+        terraform validate
+        
+    # Test validation module - doesn't need Azure authentication
+    - name: Validate Validation Module
+      run: |
+        cd modules/validation
+        terraform init -backend=false
+        terraform validate
+        
+  go-unit-tests:
+    name: 'Go Unit Tests'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Install Dependencies
+      run: |
+        cd test
+        go get github.com/gruntwork-io/terratest/modules/terraform
+        go mod tidy
+        
+    - name: Install OpenTofu
+      run: |
+        wget -O- https://get.opentofu.org/install-opentofu.sh | sh -s -- --install-method standalone
+        sudo ln -sf /opt/opentofu/tofu /usr/local/bin/terraform  # Create symlink to make tofu available as terraform
+        terraform version || tofu version  # Verify installation
+        
+    - name: Initialize Main Terraform Configuration
+      run: |
+        terraform init -backend=false
+
+    - name: Run Unit Tests
+      run: |
+        cd test
+        go test -v ./... -timeout 30m -run "TestNamingConventions|TestValidationModule"

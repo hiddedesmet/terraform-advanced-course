@@ -16,6 +16,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
 }
 
 # Use environment variable to determine environment or default to "dev"
