@@ -8,6 +8,16 @@ on:
   schedule:
     # Run nightly at 2 AM UTC
     - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run-azure-tests:
+        description: 'Run Azure-dependent tests'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 
 env:
   TF_VERSION: "1.8.0"
@@ -71,9 +81,9 @@ jobs:
     needs: validation
     # Only run when:
     # 1. Scheduled (nightly)
-    # 2. PR has 'test-azure' label
-    # 3. Commit message contains '[test-azure]'
-    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'test-azure') || contains(github.event.head_commit.message, '[test-azure]')
+    # 2. Manual workflow dispatch with azure-tests=true
+    # 3. PR has 'test-azure' label
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run-azure-tests == 'true') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test-azure'))
     
     steps:
     - uses: actions/checkout@v4
@@ -88,8 +98,29 @@ jobs:
       with:
         terraform_version: ${{ env.TF_VERSION }}
     
+    - name: Check Azure credentials availability
+      run: |
+        if [ -z "${{ secrets.AZURE_CREDENTIALS }}" ]; then
+          echo "❌ AZURE_CREDENTIALS secret is not set"
+          exit 1
+        else
+          echo "✅ AZURE_CREDENTIALS secret is available"
+        fi
+        
+        if [ -z "${{ secrets.ARM_CLIENT_ID }}" ]; then
+          echo "❌ ARM_CLIENT_ID secret is not set"
+        else
+          echo "✅ ARM_CLIENT_ID secret is available"
+        fi
+        
+        if [ -z "${{ secrets.ARM_TENANT_ID }}" ]; then
+          echo "❌ ARM_TENANT_ID secret is not set"  
+        else
+          echo "✅ ARM_TENANT_ID secret is available"
+        fi
+    
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
