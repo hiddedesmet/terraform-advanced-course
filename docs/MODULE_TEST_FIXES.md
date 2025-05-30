@@ -38,18 +38,54 @@ provider "azurerm" {
 **Problem**: Tests were using "East US" which is not a valid Azure location format
 **Fix**: Changed all location references from "East US" to "westeurope"
 
+### 5. Missing Subscription ID in Provider Configuration
+**Problem**: Azure provider blocks were missing the required `subscription_id` parameter
+**Fix**: 
+1. Updated provider configuration to include subscription_id:
+```hcl
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+```
+2. Added subscription_id variable to all Azure modules:
+```hcl
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+  validation {
+    condition     = can(regex("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$", var.subscription_id))
+    error_message = "Subscription ID must be a valid UUID format."
+  }
+}
+```
+3. Updated all test module calls to include subscription_id from environment variable:
+```go
+terraformOptions := &terraform.Options{
+  TerraformDir: "../modules/storage", // or other module
+  Vars: map[string]interface{}{
+    "subscription_id": subscriptionID, // Pass subscription ID from env var
+    // ...other variables
+  },
+}
+```
+
 ## Files Modified
 
 ### Test Files
-- `test/terraform_modules_test.go`: Fixed environment variables, slice bounds, and location
+- `test/terraform_modules_test.go`: Fixed environment variables, slice bounds, location, and added subscription_id parameter
 - `test/terraform_security_test.go`: Fixed slice bounds and location  
 - `test/terraform_performance_test.go`: Fixed location
 
 ### Module Files  
-- `modules/storage/main.tf`: Added provider configuration
-- `modules/network/main.tf`: Added provider configuration
-- `modules/webapp/main.tf`: Added provider configuration
-- `modules/keyvault/main.tf`: Added provider configuration
+- `modules/storage/main.tf`: Added provider configuration with subscription_id
+- `modules/storage/variables.tf`: Added subscription_id variable
+- `modules/network/main.tf`: Added provider configuration with subscription_id
+- `modules/network/variables.tf`: Added subscription_id variable
+- `modules/webapp/main.tf`: Added provider configuration with subscription_id
+- `modules/webapp/variables.tf`: Added subscription_id variable
+- `modules/keyvault/main.tf`: Added provider configuration with subscription_id
+- `modules/keyvault/variables.tf`: Added subscription_id variable
 
 ## Current Status
 
@@ -59,6 +95,7 @@ provider "azurerm" {
 ✅ **Valid Azure locations** - All tests use `westeurope` region
 ✅ **Tests skip gracefully** - When Azure credentials aren't available, tests skip instead of failing
 ✅ **TaggingModule test verified** - Confirmed non-Azure tests still work correctly
+✅ **Subscription ID parameter added** - All Azure provider blocks properly configured with subscription_id
 
 ## Test Execution
 

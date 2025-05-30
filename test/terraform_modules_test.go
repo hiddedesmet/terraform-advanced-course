@@ -32,6 +32,7 @@ func TestNetworkModule(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/network",
 		Vars: map[string]interface{}{
+			"subscription_id":         subscriptionID,
 			"resource_group_name":     resourceGroupName,
 			"location":                location,
 			"virtual_network_name":    fmt.Sprintf("vnet-test-%s", uniqueID),
@@ -94,6 +95,7 @@ func TestStorageModule(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/storage",
 		Vars: map[string]interface{}{
+			"subscription_id":          subscriptionID,
 			"resource_group_name":      resourceGroupName,
 			"location":                 location,
 			"storage_account_name":     fmt.Sprintf("sttest%s", storageAccountSuffix),
@@ -142,6 +144,7 @@ func TestWebAppModule(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/webapp",
 		Vars: map[string]interface{}{
+			"subscription_id":       subscriptionID,
 			"resource_group_name":   resourceGroupName,
 			"location":              location,
 			"app_service_plan_name": fmt.Sprintf("asp-test-%s", uniqueID),
@@ -194,6 +197,7 @@ func TestKeyVaultModule(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/keyvault",
 		Vars: map[string]interface{}{
+			"subscription_id":            subscriptionID,
 			"resource_group_name":        resourceGroupName,
 			"location":                   location,
 			"key_vault_name":             fmt.Sprintf("kv-test-%s", uniqueID),

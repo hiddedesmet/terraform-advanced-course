@@ -1,3 +1,12 @@
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+  validation {
+    condition     = can(regex("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$", var.subscription_id))
+    error_message = "Subscription ID must be a valid UUID format."
+  }
+}
+
 variable "storage_account_name" {
   description = "Name of the storage account (must be globally unique)"
   type        = string
