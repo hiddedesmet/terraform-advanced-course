@@ -76,6 +76,12 @@ func TestStorageModule(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
+	// Ensure storage account name is valid (max 24 chars, must be lowercase)
+	storageAccountSuffix := strings.ToLower(uniqueID)
+	if len(storageAccountSuffix) > 10 {
+		storageAccountSuffix = storageAccountSuffix[:10]
+	}
+
 	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
@@ -90,7 +96,7 @@ func TestStorageModule(t *testing.T) {
 		Vars: map[string]interface{}{
 			"resource_group_name":      resourceGroupName,
 			"location":                 location,
-			"storage_account_name":     fmt.Sprintf("sttest%s", strings.ToLower(uniqueID[:10])),
+			"storage_account_name":     fmt.Sprintf("sttest%s", storageAccountSuffix),
 			"storage_container_name":   fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
 			"account_tier":             "Standard",
 			"account_replication_type": "LRS",
@@ -248,10 +254,10 @@ func TestTaggingModule(t *testing.T) {
 func TestModulesIntegration(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := getEnvVar(t, "ARM_SUBSCRIPTION_ID", "")
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
-		t.Skip("ARM_SUBSCRIPTION_ID environment variable not set. Skipping integration test.")
+		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping integration test.")
 	}
 
 	// Test naming module first
