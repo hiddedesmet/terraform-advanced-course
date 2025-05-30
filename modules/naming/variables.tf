@@ -21,6 +21,12 @@ variable "project_name" {
   default     = "demo"
 }
 
+variable "resource_group" {
+  description = "Name of an existing resource group to use"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

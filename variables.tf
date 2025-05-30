@@ -37,12 +37,6 @@ variable "owner" {
   default     = "DevOps Team"
 }
 
-variable "subscription_id" {
-  description = "The Azure subscription ID"
-  type        = string
-  # No default - this should be provided via environment variable or tfvars file
-}
-
 variable "cost_center" {
   description = "Cost center for billing"
   type        = string

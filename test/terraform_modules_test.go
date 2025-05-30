@@ -24,9 +24,9 @@ func TestNetworkModule(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping network module test.")
 	}
 
-	// Create a test resource group first
-	resourceGroupName := fmt.Sprintf("rg-network-test-%s", uniqueID)
-	location := "westeurope"
+	// Get the shared resource group name
+	resourceGroupName := GetSharedResourceGroup(t)
+	location := sharedLocation
 
 	// Create resource group for testing
 	terraformOptions := &terraform.Options{
@@ -89,8 +89,8 @@ func TestStorageModule(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping storage module test.")
 	}
 
-	resourceGroupName := fmt.Sprintf("rg-storage-test-%s", uniqueID)
-	location := "westeurope"
+	resourceGroupName := GetSharedResourceGroup(t)
+	location := sharedLocation
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/storage",
@@ -138,8 +138,8 @@ func TestWebAppModule(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping webapp module test.")
 	}
 
-	resourceGroupName := fmt.Sprintf("rg-webapp-test-%s", uniqueID)
-	location := "westeurope"
+	resourceGroupName := GetSharedResourceGroup(t)
+	location := sharedLocation
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/webapp",
@@ -191,8 +191,8 @@ func TestKeyVaultModule(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping keyvault module test.")
 	}
 
-	resourceGroupName := fmt.Sprintf("rg-kv-test-%s", uniqueID)
-	location := "westeurope"
+	resourceGroupName := GetSharedResourceGroup(t)
+	location := sharedLocation
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/keyvault",
@@ -264,14 +264,18 @@ func TestModulesIntegration(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping integration test.")
 	}
 
+	// Get the shared resource group name
+	resourceGroupName := GetSharedResourceGroup(t)
+
 	// Test naming module first
 	namingOptions := &terraform.Options{
 		TerraformDir: "../modules/naming",
 		Vars: map[string]interface{}{
-			"prefix":       "tf",
-			"environment":  "test",
-			"suffix":       "01",
-			"project_name": "integration-test",
+			"prefix":         "tf",
+			"environment":    "test",
+			"suffix":         "01",
+			"project_name":   "integration-test",
+			"resource_group": resourceGroupName, // Use the shared resource group name
 			"tags": map[string]string{
 				"Team": "DevOps",
 			},
@@ -282,7 +286,7 @@ func TestModulesIntegration(t *testing.T) {
 	terraform.InitAndApply(t, namingOptions)
 
 	// Get naming outputs
-	resourceGroupName := terraform.Output(t, namingOptions, "resource_group")
+	resourceGroupOutput := terraform.Output(t, namingOptions, "resource_group")
 	storageAccountName := terraform.Output(t, namingOptions, "storage_account")
 
 	// Test tagging module
@@ -301,9 +305,9 @@ func TestModulesIntegration(t *testing.T) {
 	terraform.InitAndApply(t, taggingOptions)
 
 	// Verify naming conventions
-	assert.Contains(t, resourceGroupName, "tf")
-	assert.Contains(t, resourceGroupName, "test")
-	assert.Contains(t, resourceGroupName, "01")
+	assert.Contains(t, resourceGroupOutput, "tf")
+	assert.Contains(t, resourceGroupOutput, "test")
+	assert.Contains(t, resourceGroupOutput, "01")
 
 	assert.Contains(t, storageAccountName, "tf")
 	assert.Contains(t, storageAccountName, "test")

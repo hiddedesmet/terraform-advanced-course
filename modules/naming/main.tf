@@ -21,13 +21,16 @@ locals {
       managed_by  = "terraform"
     }
   )
+  
+  # Use provided resource group name if specified
+  resource_group_name = var.resource_group != "" ? var.resource_group : "${var.prefix}-${local.resource_type_abbreviations.resource_group}-${var.environment}-${var.suffix}"
 }
 
 # Resource naming function
 resource "null_resource" "resource_name" {
   triggers = {
     for resource_type, abbreviation in local.resource_type_abbreviations :
-    resource_type => "${var.prefix}-${abbreviation}-${var.environment}-${var.suffix}"
+    resource_type => resource_type == "resource_group" ? local.resource_group_name : "${var.prefix}-${abbreviation}-${var.environment}-${var.suffix}"
   }
 }
 
