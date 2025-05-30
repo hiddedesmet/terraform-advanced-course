@@ -17,7 +17,10 @@ func TestTerraformValidation(t *testing.T) {
 		// No variables needed for validation
 	}
 
-	// This will run `terraform init` and `terraform validate`
+	// Run terraform init first to install modules
+	terraform.Init(t, terraformOptions)
+	
+	// Then run terraform validate
 	terraform.Validate(t, terraformOptions)
 }
 
