@@ -19,7 +19,7 @@ func TestTerraformValidation(t *testing.T) {
 
 	// Run terraform init first to install modules
 	terraform.Init(t, terraformOptions)
-	
+
 	// Then run terraform validate
 	terraform.Validate(t, terraformOptions)
 }
