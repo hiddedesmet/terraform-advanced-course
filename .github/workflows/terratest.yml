@@ -10,14 +10,19 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
-      run-azure-tests:
-        description: 'Run Azure-dependent tests'
-        required: false
-        default: 'false'
+      test-suite:
+        description: 'Which test suite to run'
+        required: true
+        default: 'validation-only'
         type: choice
         options:
-        - 'true'
-        - 'false'
+        - 'validation-only'
+        - 'module-tests'
+        - 'infrastructure-tests'
+        - 'security-tests'
+        - 'performance-tests'
+        - 'complete-suite'
+        - 'all-tests'
 
 env:
   TF_VERSION: "1.8.0"
@@ -81,10 +86,10 @@ jobs:
     needs: validation
     # Only run when:
     # 1. Scheduled (nightly)
-    # 2. Manual workflow dispatch with azure-tests=true
+    # 2. Manual workflow dispatch with relevant test suite
     # 3. PR has 'test-azure' label
     # 4. Commit message contains '[test-azure]'
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run-azure-tests == 'true') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test-azure')) || contains(toJSON(github.event.commits.*.message), '[test-azure]')
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test-suite == 'module-tests' || github.event.inputs.test-suite == 'all-tests')) || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test-azure')) || contains(toJSON(github.event.commits.*.message), '[test-azure]')
     
     steps:
     - uses: actions/checkout@v4
@@ -151,7 +156,7 @@ jobs:
     name: Infrastructure Tests
     runs-on: ubuntu-latest
     needs: module-tests
-    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'test-infrastructure')
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test-suite == 'infrastructure-tests' || github.event.inputs.test-suite == 'all-tests')) || contains(github.event.pull_request.labels.*.name, 'test-infrastructure')
     
     steps:
     - uses: actions/checkout@v4
@@ -188,7 +193,7 @@ jobs:
     name: Security Tests
     runs-on: ubuntu-latest
     needs: validation
-    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'test-security')
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test-suite == 'security-tests' || github.event.inputs.test-suite == 'all-tests')) || contains(github.event.pull_request.labels.*.name, 'test-security')
     
     steps:
     - uses: actions/checkout@v4
@@ -204,9 +209,15 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
     
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: |
+          {
+            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+            "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
+            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          }
     
     - name: Download dependencies
       run: go mod download
@@ -214,9 +225,9 @@ jobs:
     - name: Run security tests
       env:
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         go test -v ./test/ -run "TestSecurityCompliance|TestDataEncryption|TestAccessControl|TestComplianceTags" -timeout 30m
 
@@ -225,7 +236,7 @@ jobs:
     name: Performance Tests
     runs-on: ubuntu-latest
     needs: module-tests
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test-suite == 'performance-tests' || github.event.inputs.test-suite == 'all-tests'))
     
     steps:
     - uses: actions/checkout@v4
@@ -241,9 +252,15 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
     
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: |
+          {
+            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+            "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
+            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          }
     
     - name: Download dependencies
       run: go mod download
@@ -251,9 +268,9 @@ jobs:
     - name: Run performance tests
       env:
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         go test -v ./test/ -run "TestPerformanceBenchmarks|TestScalabilityLimits|TestResourceLimits" -timeout 60m
 
@@ -262,7 +279,7 @@ jobs:
     name: Complete Test Suite
     runs-on: ubuntu-latest
     needs: [validation, module-tests]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'schedule'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test-suite == 'complete-suite' || github.event.inputs.test-suite == 'all-tests'))
     
     steps:
     - uses: actions/checkout@v4
@@ -278,9 +295,15 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
     
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: |
+          {
+            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+            "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
+            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          }
     
     - name: Download dependencies
       run: go mod download
@@ -288,9 +311,9 @@ jobs:
     - name: Run complete test suite
       env:
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         go test -v ./test/ -run TestTerraformTestSuite -timeout 120m
 
