@@ -12,17 +12,20 @@ locals {
     app_service_plan_name  = 40
   }
 
-  # Resource name validation
-  validate_resource_group_name    = length(var.resource_group_name) <= local.max_length.resource_group_name ? null : file("ERROR: resource_group_name exceeds maximum length")
-  validate_storage_account_name   = length(var.storage_account_name) <= local.max_length.storage_account_name ? null : file("ERROR: storage_account_name exceeds maximum length")
-  validate_key_vault_name         = length(var.key_vault_name) <= local.max_length.key_vault_name ? null : file("ERROR: key_vault_name exceeds maximum length")
-  validate_web_app_name           = length(var.web_app_name) <= local.max_length.web_app_name ? null : file("ERROR: web_app_name exceeds maximum length")
-  validate_virtual_network_name   = length(var.virtual_network_name) <= local.max_length.virtual_network_name ? null : file("ERROR: virtual_network_name exceeds maximum length")
-  validate_subnet_name            = length(var.subnet_name) <= local.max_length.subnet_name ? null : file("ERROR: subnet_name exceeds maximum length")
-  validate_nsg_name               = length(var.nsg_name) <= local.max_length.nsg_name ? null : file("ERROR: nsg_name exceeds maximum length")
-  validate_storage_container_name = length(var.storage_container_name) <= local.max_length.storage_container_name ? null : file("ERROR: storage_container_name exceeds maximum length")
-  validate_app_service_plan_name  = length(var.app_service_plan_name) <= local.max_length.app_service_plan_name ? null : file("ERROR: app_service_plan_name exceeds maximum length")
+  # Resource name validation - return validation results instead of causing errors
+  validate_resource_group_name    = length(var.resource_group_name) <= local.max_length.resource_group_name
+  validate_storage_account_name   = length(var.storage_account_name) <= local.max_length.storage_account_name
+  validate_key_vault_name         = length(var.key_vault_name) <= local.max_length.key_vault_name
+  validate_web_app_name           = length(var.web_app_name) <= local.max_length.web_app_name
+  validate_virtual_network_name   = length(var.virtual_network_name) <= local.max_length.virtual_network_name
+  validate_subnet_name            = length(var.subnet_name) <= local.max_length.subnet_name
+  validate_nsg_name               = length(var.nsg_name) <= local.max_length.nsg_name
+  validate_storage_container_name = length(var.storage_container_name) <= local.max_length.storage_container_name
+  validate_app_service_plan_name  = length(var.app_service_plan_name) <= local.max_length.app_service_plan_name
 
   # Additional storage account name validation (lowercase letters and numbers only)
-  validate_storage_account_chars = can(regex("^[a-z0-9]+$", var.storage_account_name)) ? null : file("ERROR: storage_account_name must contain only lowercase letters and numbers")
+  validate_storage_account_chars = can(regex("^[a-z0-9]+$", var.storage_account_name))
+
+  # Overall validation result
+  is_valid = local.validate_resource_group_name && local.validate_storage_account_name && local.validate_key_vault_name && local.validate_web_app_name && local.validate_virtual_network_name && local.validate_subnet_name && local.validate_nsg_name && local.validate_storage_container_name && local.validate_app_service_plan_name && local.validate_storage_account_chars
 }
