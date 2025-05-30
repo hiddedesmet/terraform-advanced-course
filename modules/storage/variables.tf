@@ -22,14 +22,14 @@ variable "location" {
   validation {
     condition = contains([
       # North America regions
-      "northcentralus", "eastus", "eastus2", "westus", "westus2", "westus3", 
+      "northcentralus", "eastus", "eastus2", "westus", "westus2", "westus3",
       "southcentralus", "centralus", "westcentralus", "canadacentral", "canadaeast",
-      
+
       # Europe regions
       "northeurope", "westeurope", "uksouth", "ukwest", "francecentral", "francesouth",
       "switzerlandnorth", "switzerlandwest", "germanywestcentral", "norwayeast", "norwaywest",
       "swedencentral", "swedensouth",
-      
+
       # Asia Pacific regions
       "eastasia", "southeastasia",
       "japaneast", "japanwest",
@@ -73,7 +73,7 @@ variable "storage_container_name" {
   description = "Name of the storage container"
   type        = string
   validation {
-    condition     = can(regex("^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$|^\\$root$|^\\$web$", var.storage_container_name))
+    condition     = can(regex("^[a-z0-9]([a-z0-9-])*[a-z0-9]$", var.storage_container_name)) && length(var.storage_container_name) >= 3 && length(var.storage_container_name) <= 63
     error_message = "Storage container name must be between 3-63 characters, start and end with a letter or number, and contain only lowercase letters, numbers, and hyphens."
   }
 }
