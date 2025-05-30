@@ -84,7 +84,7 @@ jobs:
     # 2. Manual workflow dispatch with azure-tests=true
     # 3. PR has 'test-azure' label
     # 4. Commit message contains '[test-azure]'
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run-azure-tests == 'true') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test-azure')) || contains(github.event.head_commit.message, '[test-azure]')
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run-azure-tests == 'true') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test-azure')) || contains(toJSON(github.event.commits.*.message), '[test-azure]')
     
     steps:
     - uses: actions/checkout@v4
