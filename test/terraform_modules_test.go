@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestNetworkModule(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping network module test.")
@@ -75,7 +76,7 @@ func TestStorageModule(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping storage module test.")
@@ -123,7 +124,7 @@ func TestWebAppModule(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping webapp module test.")
@@ -175,7 +176,7 @@ func TestKeyVaultModule(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping keyvault module test.")

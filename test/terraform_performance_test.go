@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func TestPerformanceBenchmarks(t *testing.T) {
 	}
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping performance test.")
@@ -81,7 +82,7 @@ func TestScalabilityLimits(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping scalability test.")
@@ -150,7 +151,7 @@ func TestResourceLimits(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping resource limits test.")
@@ -214,7 +215,7 @@ func TestConcurrentDeployments(t *testing.T) {
 		t.Skip("Skipping concurrent deployment test in short mode")
 	}
 
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping concurrent deployment test.")

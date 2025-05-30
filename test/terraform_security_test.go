@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestSecurityCompliance(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping security test.")
@@ -95,7 +96,7 @@ func TestDataEncryption(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping encryption test.")
@@ -152,7 +153,7 @@ func TestAccessControl(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping access control test.")
@@ -206,7 +207,7 @@ func TestComplianceTags(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := random.UniqueId()
-	subscriptionID := "" // Set this to your Azure subscription ID
+	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 
 	if subscriptionID == "" {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping compliance test.")
