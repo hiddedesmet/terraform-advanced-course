@@ -47,11 +47,18 @@ jobs:
     
     - name: Format check
       run: |
-        if [ "$(gofmt -s -l test/ | wc -l)" -gt 0 ]; then
-          echo "Go files must be formatted with gofmt. Please run:"
-          echo "  gofmt -s -w test/"
+        echo "Checking Go formatting..."
+        echo "Go version: $(go version)"
+        echo "Files to check:"
+        find test/ -name "*.go" | head -10
+        UNFORMATTED=$(gofmt -s -l test/)
+        if [ -n "$UNFORMATTED" ]; then
+          echo "The following files are not formatted correctly:"
+          echo "$UNFORMATTED"
+          echo "Please run: gofmt -s -w test/"
           exit 1
         fi
+        echo "All Go files are properly formatted."
     
     - name: Run validation tests
       run: |
