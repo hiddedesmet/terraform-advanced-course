@@ -118,11 +118,11 @@ func TestValidationModule(t *testing.T) {
 
 	// Plan with invalid data should succeed but output should show validation failed
 	terraform.InitAndPlan(t, invalidOptions)
-	
+
 	// Apply to get outputs and check validation result
 	terraform.Apply(t, invalidOptions)
 	defer terraform.Destroy(t, invalidOptions)
-	
+
 	// Check that validation correctly identified the invalid storage account name
 	isValid := terraform.Output(t, invalidOptions, "is_valid")
 	assert.Equal(t, "false", isValid, "Expected validation to fail for invalid storage account name")

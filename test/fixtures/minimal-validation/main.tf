@@ -16,7 +16,7 @@ locals {
   test_string = "hello-world"
   test_number = 42
   test_bool   = true
-  
+
   # Test validation logic
   name_length_valid = length(local.test_string) > 0 && length(local.test_string) <= 50
 }
