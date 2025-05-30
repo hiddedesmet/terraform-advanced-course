@@ -21,7 +21,7 @@ locals {
       managed_by  = "terraform"
     }
   )
-  
+
   # Use provided resource group name if specified
   resource_group_name = var.resource_group != "" ? var.resource_group : "${var.prefix}-${local.resource_type_abbreviations.resource_group}-${var.environment}-${var.suffix}"
 }

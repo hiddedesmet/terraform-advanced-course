@@ -267,7 +267,7 @@ func TestModulesIntegration(t *testing.T) {
 	// Get the shared resource group name
 	resourceGroupName := GetSharedResourceGroup(t)
 
-	// Test naming module first
+	// Test naming module first - using shared resource group
 	namingOptions := &terraform.Options{
 		TerraformDir: "../modules/naming",
 		Vars: map[string]interface{}{
@@ -289,6 +289,27 @@ func TestModulesIntegration(t *testing.T) {
 	resourceGroupOutput := terraform.Output(t, namingOptions, "resource_group")
 	storageAccountName := terraform.Output(t, namingOptions, "storage_account")
 
+	// Test naming module without specifying resource group (to test generation)
+	namingGenerationOptions := &terraform.Options{
+		TerraformDir: "../modules/naming",
+		Vars: map[string]interface{}{
+			"prefix":         "tf",
+			"environment":    "test",
+			"suffix":         "01",
+			"project_name":   "integration-test",
+			"resource_group": "", // Empty to test name generation
+			"tags": map[string]string{
+				"Team": "DevOps",
+			},
+		},
+	}
+
+	defer terraform.Destroy(t, namingGenerationOptions)
+	terraform.InitAndApply(t, namingGenerationOptions)
+
+	// Get generated naming outputs
+	generatedResourceGroupName := terraform.Output(t, namingGenerationOptions, "resource_group")
+
 	// Test tagging module
 	taggingOptions := &terraform.Options{
 		TerraformDir: "../modules/tagging",
@@ -304,10 +325,13 @@ func TestModulesIntegration(t *testing.T) {
 	defer terraform.Destroy(t, taggingOptions)
 	terraform.InitAndApply(t, taggingOptions)
 
-	// Verify naming conventions
-	assert.Contains(t, resourceGroupOutput, "tf")
-	assert.Contains(t, resourceGroupOutput, "test")
-	assert.Contains(t, resourceGroupOutput, "01")
+	// Verify that when resource_group is provided, it returns the same name
+	assert.Equal(t, resourceGroupName, resourceGroupOutput, "Naming module should return the provided resource group name")
+
+	// Verify naming conventions for generated names
+	assert.Contains(t, generatedResourceGroupName, "tf")
+	assert.Contains(t, generatedResourceGroupName, "test")
+	assert.Contains(t, generatedResourceGroupName, "01")
 
 	assert.Contains(t, storageAccountName, "tf")
 	assert.Contains(t, storageAccountName, "test")

@@ -24,11 +24,14 @@ func TestSecurityCompliance(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping security test.")
 	}
 
+	// Use shared resource group
+	resourceGroupName := GetSharedResourceGroup(t)
+
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../",
+		TerraformDir: "./fixtures/security-test",
 		Vars: map[string]interface{}{
 			"subscription_id":     subscriptionID,
-			"resource_group_name": fmt.Sprintf("rg-security-test-%s", uniqueID),
+			"resource_group_name": resourceGroupName,
 			"location":            "westeurope",
 			"storage_account_name": fmt.Sprintf("stsec%s", func() string {
 				s := strings.ToLower(uniqueID)
@@ -57,7 +60,6 @@ func TestSecurityCompliance(t *testing.T) {
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Get resource information
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 	storageAccountName := terraform.Output(t, terraformOptions, "storage_account_name")
 	keyVaultName := terraform.Output(t, terraformOptions, "key_vault_name")
 	webAppName := terraform.Output(t, terraformOptions, "web_app_name")
@@ -108,11 +110,14 @@ func TestDataEncryption(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping encryption test.")
 	}
 
+	// Use shared resource group
+	resourceGroupName := GetSharedResourceGroup(t)
+
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../",
+		TerraformDir: "./fixtures/security-test",
 		Vars: map[string]interface{}{
 			"subscription_id":     subscriptionID,
-			"resource_group_name": fmt.Sprintf("rg-encryption-test-%s", uniqueID),
+			"resource_group_name": resourceGroupName,
 			"location":            "westeurope",
 			"storage_account_name": fmt.Sprintf("stenc%s", func() string {
 				s := strings.ToLower(uniqueID)
@@ -140,7 +145,6 @@ func TestDataEncryption(t *testing.T) {
 	defer terraform.Destroy(t, terraformOptions)
 	terraform.InitAndApply(t, terraformOptions)
 
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 	storageAccountName := terraform.Output(t, terraformOptions, "storage_account_name")
 
 	// Test Storage Account Encryption
@@ -171,11 +175,14 @@ func TestAccessControl(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping access control test.")
 	}
 
+	// Use shared resource group
+	resourceGroupName := GetSharedResourceGroup(t)
+
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../",
+		TerraformDir: "./fixtures/security-test",
 		Vars: map[string]interface{}{
 			"subscription_id":     subscriptionID,
-			"resource_group_name": fmt.Sprintf("rg-access-test-%s", uniqueID),
+			"resource_group_name": resourceGroupName,
 			"location":            "westeurope",
 			"storage_account_name": fmt.Sprintf("stacc%s", func() string {
 				s := strings.ToLower(uniqueID)
@@ -203,7 +210,6 @@ func TestAccessControl(t *testing.T) {
 	defer terraform.Destroy(t, terraformOptions)
 	terraform.InitAndApply(t, terraformOptions)
 
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 	keyVaultName := terraform.Output(t, terraformOptions, "key_vault_name")
 
 	// Test Key Vault Access Policies
@@ -237,11 +243,14 @@ func TestComplianceTags(t *testing.T) {
 		safeID = safeID[:8] // Keep it shorter to avoid exceeding Azure storage name limits
 	}
 
+	// Use shared resource group
+	resourceGroupName := GetSharedResourceGroup(t)
+
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../",
+		TerraformDir: "./fixtures/security-test",
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
-			"resource_group_name":    fmt.Sprintf("rg-compliance-%s", uniqueID),
+			"resource_group_name":    resourceGroupName,
 			"location":               "westeurope",
 			"storage_account_name":   fmt.Sprintf("stcomp%s", safeID),
 			"key_vault_name":         fmt.Sprintf("kv-comp-%s", uniqueID),
@@ -265,8 +274,6 @@ func TestComplianceTags(t *testing.T) {
 
 	// Required compliance tags
 	requiredTags := []string{"Environment", "Project", "Owner", "CostCenter", "CreatedDate", "TerraformVersion"}
-
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 
 	// Test Resource Group tags
 	// Test Resource Group tags (simplified check)
