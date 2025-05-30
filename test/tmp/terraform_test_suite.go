@@ -17,7 +17,7 @@ func TestAllModules(t *testing.T) {
 	if subscriptionID == "" {
 		t.Skip("Azure subscription ID not available")
 	}
-	
+
 	t.Run("NetworkModule", TestNetworkModule)
 	t.Run("StorageModule", TestStorageModule)
 	t.Run("WebAppModule", TestWebAppModule)
@@ -32,7 +32,7 @@ func TestAllInfrastructure(t *testing.T) {
 	if subscriptionID == "" {
 		t.Skip("Azure subscription ID not available")
 	}
-	
+
 	t.Run("AdvancedInfrastructure", TestTerraformAdvancedInfrastructure)
 }
 
@@ -42,7 +42,7 @@ func TestAllSecurity(t *testing.T) {
 	if subscriptionID == "" {
 		t.Skip("Azure subscription ID not available")
 	}
-	
+
 	t.Run("SecurityCompliance", TestSecurityCompliance)
 	t.Run("DataEncryption", TestDataEncryption)
 	t.Run("AccessControl", TestAccessControl)
@@ -55,7 +55,7 @@ func TestAllPerformance(t *testing.T) {
 	if subscriptionID == "" {
 		t.Skip("Azure subscription ID not available")
 	}
-	
+
 	t.Run("PerformanceBenchmarks", TestPerformanceBenchmarks)
 	t.Run("ScalabilityLimits", TestScalabilityLimits)
 	t.Run("ResourceLimits", TestResourceLimits)

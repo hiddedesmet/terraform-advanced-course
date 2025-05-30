@@ -296,7 +296,7 @@ func TestModulesIntegration(t *testing.T) {
 
 	assert.Contains(t, storageAccountName, "tf")
 	assert.Contains(t, storageAccountName, "test")
-	
+
 	// Verify storage account name compliance (lowercase, no special chars, 3-24 chars)
 	assert.Equal(t, strings.ToLower(storageAccountName), storageAccountName)
 	assert.True(t, len(storageAccountName) >= 3 && len(storageAccountName) <= 24)

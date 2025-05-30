@@ -25,20 +25,20 @@ func TestTerraformAdvancedInfrastructure(t *testing.T) {
 		TerraformDir: "../",
 		VarFiles:     []string{"environments/dev.tfvars"},
 		Vars: map[string]interface{}{
-			"resource_group_name":     resourceGroupName,
-			"storage_account_name":    fmt.Sprintf("st%s", strings.ToLower(uniqueID)),
-			"key_vault_name":          fmt.Sprintf("kv-%s", uniqueID),
-			"web_app_name":            fmt.Sprintf("webapp-%s", uniqueID),
-			"virtual_network_name":    fmt.Sprintf("vnet-%s", uniqueID),
-			"subnet_name":             fmt.Sprintf("subnet-%s", uniqueID),
-			"nsg_name":                fmt.Sprintf("nsg-%s", uniqueID),
-			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
-			"app_service_plan_name":   fmt.Sprintf("asp-%s", uniqueID),
-			"prefix":                  "tf",
-			"environment":             "dev",
-			"suffix":                  "01",
-			"project_name":            "terratest",
-			"owner":                   "test-team",
+			"resource_group_name":    resourceGroupName,
+			"storage_account_name":   fmt.Sprintf("st%s", strings.ToLower(uniqueID)),
+			"key_vault_name":         fmt.Sprintf("kv-%s", uniqueID),
+			"web_app_name":           fmt.Sprintf("webapp-%s", uniqueID),
+			"virtual_network_name":   fmt.Sprintf("vnet-%s", uniqueID),
+			"subnet_name":            fmt.Sprintf("subnet-%s", uniqueID),
+			"nsg_name":               fmt.Sprintf("nsg-%s", uniqueID),
+			"storage_container_name": fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":  fmt.Sprintf("asp-%s", uniqueID),
+			"prefix":                 "tf",
+			"environment":            "dev",
+			"suffix":                 "01",
+			"project_name":           "terratest",
+			"owner":                  "test-team",
 		},
 		RetryableTerraformErrors: map[string]string{
 			".*": "Will try again",
@@ -82,7 +82,7 @@ func TestTerraformAdvancedInfrastructure(t *testing.T) {
 		"Project":     "terratest",
 		"Owner":       "test-team",
 	}
-	
+
 	for key, expectedValue := range expectedTags {
 		if actualValue, exists := actualWebApp.Tags[key]; exists {
 			assert.Equal(t, expectedValue, *actualValue)
@@ -109,20 +109,20 @@ func TestTerraformInfrastructureWithDifferentEnvironments(t *testing.T) {
 				TerraformDir: "../",
 				VarFiles:     []string{fmt.Sprintf("environments/%s.tfvars", env)},
 				Vars: map[string]interface{}{
-					"resource_group_name":     resourceGroupName,
-					"storage_account_name":    fmt.Sprintf("st%s%s", env, strings.ToLower(uniqueID)),
-					"key_vault_name":          fmt.Sprintf("kv-%s-%s", env, uniqueID),
-					"web_app_name":            fmt.Sprintf("webapp-%s-%s", env, uniqueID),
-					"virtual_network_name":    fmt.Sprintf("vnet-%s-%s", env, uniqueID),
-					"subnet_name":             fmt.Sprintf("subnet-%s-%s", env, uniqueID),
-					"nsg_name":                fmt.Sprintf("nsg-%s-%s", env, uniqueID),
-					"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
-					"app_service_plan_name":   fmt.Sprintf("asp-%s-%s", env, uniqueID),
-					"prefix":                  "tf",
-					"environment":             env,
-					"suffix":                  "01",
-					"project_name":            "terratest",
-					"owner":                   "test-team",
+					"resource_group_name":    resourceGroupName,
+					"storage_account_name":   fmt.Sprintf("st%s%s", env, strings.ToLower(uniqueID)),
+					"key_vault_name":         fmt.Sprintf("kv-%s-%s", env, uniqueID),
+					"web_app_name":           fmt.Sprintf("webapp-%s-%s", env, uniqueID),
+					"virtual_network_name":   fmt.Sprintf("vnet-%s-%s", env, uniqueID),
+					"subnet_name":            fmt.Sprintf("subnet-%s-%s", env, uniqueID),
+					"nsg_name":               fmt.Sprintf("nsg-%s-%s", env, uniqueID),
+					"storage_container_name": fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+					"app_service_plan_name":  fmt.Sprintf("asp-%s-%s", env, uniqueID),
+					"prefix":                 "tf",
+					"environment":            env,
+					"suffix":                 "01",
+					"project_name":           "terratest",
+					"owner":                  "test-team",
 				},
 				RetryableTerraformErrors: map[string]string{
 					".*": "Will try again",
@@ -138,7 +138,7 @@ func TestTerraformInfrastructureWithDifferentEnvironments(t *testing.T) {
 			resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 			rg, err := azure.GetResourceGroupE(t, resourceGroupName, subscriptionID)
 			assert.NoError(t, err)
-			
+
 			// Verify environment tag
 			if envTag, exists := rg.Tags["Environment"]; exists {
 				assert.Equal(t, env, *envTag)
@@ -159,20 +159,20 @@ func TestInfrastructurePerformance(t *testing.T) {
 		TerraformDir: "../",
 		VarFiles:     []string{"environments/dev.tfvars"},
 		Vars: map[string]interface{}{
-			"resource_group_name":     resourceGroupName,
-			"storage_account_name":    fmt.Sprintf("stperf%s", strings.ToLower(uniqueID)),
-			"key_vault_name":          fmt.Sprintf("kv-perf-%s", uniqueID),
-			"web_app_name":            fmt.Sprintf("webapp-perf-%s", uniqueID),
-			"virtual_network_name":    fmt.Sprintf("vnet-perf-%s", uniqueID),
-			"subnet_name":             fmt.Sprintf("subnet-perf-%s", uniqueID),
-			"nsg_name":                fmt.Sprintf("nsg-perf-%s", uniqueID),
-			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
-			"app_service_plan_name":   fmt.Sprintf("asp-perf-%s", uniqueID),
-			"prefix":                  "tf",
-			"environment":             "performance",
-			"suffix":                  "01",
-			"project_name":            "terratest",
-			"owner":                   "test-team",
+			"resource_group_name":    resourceGroupName,
+			"storage_account_name":   fmt.Sprintf("stperf%s", strings.ToLower(uniqueID)),
+			"key_vault_name":         fmt.Sprintf("kv-perf-%s", uniqueID),
+			"web_app_name":           fmt.Sprintf("webapp-perf-%s", uniqueID),
+			"virtual_network_name":   fmt.Sprintf("vnet-perf-%s", uniqueID),
+			"subnet_name":            fmt.Sprintf("subnet-perf-%s", uniqueID),
+			"nsg_name":               fmt.Sprintf("nsg-perf-%s", uniqueID),
+			"storage_container_name": fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":  fmt.Sprintf("asp-perf-%s", uniqueID),
+			"prefix":                 "tf",
+			"environment":            "performance",
+			"suffix":                 "01",
+			"project_name":           "terratest",
+			"owner":                  "test-team",
 		},
 		RetryableTerraformErrors: map[string]string{
 			".*": "Will try again",

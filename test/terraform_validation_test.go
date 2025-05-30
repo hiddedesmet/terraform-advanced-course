@@ -55,10 +55,10 @@ func TestNamingConventions(t *testing.T) {
 
 	assert.Contains(t, storageAccountName, "tf")
 	assert.Contains(t, storageAccountName, "dev")
-	
+
 	assert.Contains(t, webAppName, "tf")
 	assert.Contains(t, webAppName, "dev")
-	
+
 	assert.Contains(t, keyVaultName, "tf")
 	assert.Contains(t, keyVaultName, "dev")
 
@@ -82,10 +82,10 @@ func TestValidationModule(t *testing.T) {
 			"resource_group_name":    "valid-rg-name",
 			"storage_account_name":   "validstorageaccount",
 			"key_vault_name":         "valid-kv-name",
-			"web_app_name":          "valid-webapp-name",
+			"web_app_name":           "valid-webapp-name",
 			"virtual_network_name":   "valid-vnet-name",
-			"subnet_name":           "valid-subnet-name",
-			"nsg_name":              "valid-nsg-name",
+			"subnet_name":            "valid-subnet-name",
+			"nsg_name":               "valid-nsg-name",
 			"storage_container_name": "valid-container",
 			"app_service_plan_name":  "valid-plan-name",
 		},
@@ -101,10 +101,10 @@ func TestValidationModule(t *testing.T) {
 			"resource_group_name":    "valid-rg-name",
 			"storage_account_name":   "thisstorageaccountnameistoolongandwillfail",
 			"key_vault_name":         "valid-kv-name",
-			"web_app_name":          "valid-webapp-name",
+			"web_app_name":           "valid-webapp-name",
 			"virtual_network_name":   "valid-vnet-name",
-			"subnet_name":           "valid-subnet-name",
-			"nsg_name":              "valid-nsg-name",
+			"subnet_name":            "valid-subnet-name",
+			"nsg_name":               "valid-nsg-name",
 			"storage_container_name": "valid-container",
 			"app_service_plan_name":  "valid-plan-name",
 		},
