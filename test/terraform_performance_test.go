@@ -32,7 +32,7 @@ func TestPerformanceBenchmarks(t *testing.T) {
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
 			"resource_group_name":    fmt.Sprintf("rg-perf-%s", uniqueID),
-			"location":               "East US",
+			"location":               "westeurope",
 			"storage_account_name":   fmt.Sprintf("stperf%s", strings.ToLower(uniqueID[:10])),
 			"key_vault_name":         fmt.Sprintf("kv-perf-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-perf-%s", uniqueID),
@@ -93,7 +93,7 @@ func TestScalabilityLimits(t *testing.T) {
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
 			"resource_group_name":    fmt.Sprintf("rg-scale-%s", uniqueID),
-			"location":               "East US",
+			"location":               "westeurope",
 			"storage_account_name":   fmt.Sprintf("stscale%s", strings.ToLower(uniqueID[:9])),
 			"key_vault_name":         fmt.Sprintf("kv-scale-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-scale-%s", uniqueID),
@@ -162,7 +162,7 @@ func TestResourceLimits(t *testing.T) {
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
 			"resource_group_name":    fmt.Sprintf("rg-limits-%s", uniqueID),
-			"location":               "East US",
+			"location":               "westeurope",
 			"storage_account_name":   fmt.Sprintf("stlimit%s", strings.ToLower(uniqueID[:9])),
 			"key_vault_name":         fmt.Sprintf("kv-limits-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-limits-%s", uniqueID),
@@ -233,7 +233,7 @@ func TestConcurrentDeployments(t *testing.T) {
 				Vars: map[string]interface{}{
 					"subscription_id":        subscriptionID,
 					"resource_group_name":    fmt.Sprintf("rg-concurrent-%d-%s", deploymentIndex, uniqueID),
-					"location":               "East US",
+					"location":               "westeurope",
 					"storage_account_name":   fmt.Sprintf("stconc%d%s", deploymentIndex, strings.ToLower(uniqueID[:7])),
 					"key_vault_name":         fmt.Sprintf("kv-conc-%d-%s", deploymentIndex, uniqueID),
 					"web_app_name":           fmt.Sprintf("webapp-conc-%d-%s", deploymentIndex, uniqueID),

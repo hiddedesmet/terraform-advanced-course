@@ -26,7 +26,7 @@ func TestNetworkModule(t *testing.T) {
 
 	// Create a test resource group first
 	resourceGroupName := fmt.Sprintf("rg-network-test-%s", uniqueID)
-	location := "East US"
+	location := "westeurope"
 
 	// Create resource group for testing
 	terraformOptions := &terraform.Options{
@@ -89,7 +89,7 @@ func TestStorageModule(t *testing.T) {
 	}
 
 	resourceGroupName := fmt.Sprintf("rg-storage-test-%s", uniqueID)
-	location := "East US"
+	location := "westeurope"
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/storage",
@@ -137,7 +137,7 @@ func TestWebAppModule(t *testing.T) {
 	}
 
 	resourceGroupName := fmt.Sprintf("rg-webapp-test-%s", uniqueID)
-	location := "East US"
+	location := "westeurope"
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/webapp",
@@ -189,7 +189,7 @@ func TestKeyVaultModule(t *testing.T) {
 	}
 
 	resourceGroupName := fmt.Sprintf("rg-kv-test-%s", uniqueID)
-	location := "East US"
+	location := "westeurope"
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../modules/keyvault",

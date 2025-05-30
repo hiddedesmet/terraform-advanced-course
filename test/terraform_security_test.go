@@ -27,10 +27,16 @@ func TestSecurityCompliance(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../",
 		Vars: map[string]interface{}{
-			"subscription_id":        subscriptionID,
-			"resource_group_name":    fmt.Sprintf("rg-security-test-%s", uniqueID),
-			"location":               "East US",
-			"storage_account_name":   fmt.Sprintf("stsec%s", strings.ToLower(uniqueID[:10])),
+			"subscription_id":     subscriptionID,
+			"resource_group_name": fmt.Sprintf("rg-security-test-%s", uniqueID),
+			"location":            "westeurope",
+			"storage_account_name": fmt.Sprintf("stsec%s", func() string {
+				s := strings.ToLower(uniqueID)
+				if len(s) > 10 {
+					return s[:10]
+				}
+				return s
+			}()),
 			"key_vault_name":         fmt.Sprintf("kv-sec-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-sec-%s", uniqueID),
 			"virtual_network_name":   fmt.Sprintf("vnet-sec-%s", uniqueID),
@@ -105,10 +111,16 @@ func TestDataEncryption(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../",
 		Vars: map[string]interface{}{
-			"subscription_id":        subscriptionID,
-			"resource_group_name":    fmt.Sprintf("rg-encryption-test-%s", uniqueID),
-			"location":               "East US",
-			"storage_account_name":   fmt.Sprintf("stenc%s", strings.ToLower(uniqueID[:10])),
+			"subscription_id":     subscriptionID,
+			"resource_group_name": fmt.Sprintf("rg-encryption-test-%s", uniqueID),
+			"location":            "westeurope",
+			"storage_account_name": fmt.Sprintf("stenc%s", func() string {
+				s := strings.ToLower(uniqueID)
+				if len(s) > 10 {
+					return s[:10]
+				}
+				return s
+			}()),
 			"key_vault_name":         fmt.Sprintf("kv-enc-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-enc-%s", uniqueID),
 			"virtual_network_name":   fmt.Sprintf("vnet-enc-%s", uniqueID),
@@ -162,10 +174,16 @@ func TestAccessControl(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../",
 		Vars: map[string]interface{}{
-			"subscription_id":        subscriptionID,
-			"resource_group_name":    fmt.Sprintf("rg-access-test-%s", uniqueID),
-			"location":               "East US",
-			"storage_account_name":   fmt.Sprintf("stacc%s", strings.ToLower(uniqueID[:10])),
+			"subscription_id":     subscriptionID,
+			"resource_group_name": fmt.Sprintf("rg-access-test-%s", uniqueID),
+			"location":            "westeurope",
+			"storage_account_name": fmt.Sprintf("stacc%s", func() string {
+				s := strings.ToLower(uniqueID)
+				if len(s) > 10 {
+					return s[:10]
+				}
+				return s
+			}()),
 			"key_vault_name":         fmt.Sprintf("kv-acc-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-acc-%s", uniqueID),
 			"virtual_network_name":   fmt.Sprintf("vnet-acc-%s", uniqueID),
@@ -218,7 +236,7 @@ func TestComplianceTags(t *testing.T) {
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
 			"resource_group_name":    fmt.Sprintf("rg-compliance-%s", uniqueID),
-			"location":               "East US",
+			"location":               "westeurope",
 			"storage_account_name":   fmt.Sprintf("stcomp%s", strings.ToLower(uniqueID[:9])),
 			"key_vault_name":         fmt.Sprintf("kv-comp-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-comp-%s", uniqueID),
