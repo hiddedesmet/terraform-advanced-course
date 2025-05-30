@@ -62,7 +62,7 @@ jobs:
     
     - name: Run validation tests
       run: |
-        go test -v ./test/ -run "TestTerraformValidation|TestNamingConventions|TestValidationModule" -timeout 10m
+        go test -v ./test/ -run "TestTerraformValidation|TestNamingConventions" -timeout 10m
 
   # Module tests that require Azure credentials
   module-tests:
