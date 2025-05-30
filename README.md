@@ -177,6 +177,53 @@ terraform destroy -var-file=environments/dev.tfvars
 9. **Code Review**: Pull request workflow with automated validation
 10. **Comprehensive Testing**: Automated testing with Terratest for infrastructure validation
 
+## CI/CD and Testing
+
+This project includes a comprehensive CI/CD pipeline with multiple types of tests:
+
+### Automated Testing Levels
+
+1. **Validation Tests** (always run):
+   - Terraform syntax validation
+   - Go code formatting checks  
+   - Basic validation logic tests
+   - No Azure credentials required
+
+2. **Azure Module Tests** (conditional):
+   - Individual module testing against Azure
+   - Requires Azure credentials
+   - Only runs when explicitly requested
+
+3. **Integration Tests** (scheduled):
+   - Full infrastructure deployment tests
+   - End-to-end validation
+   - Runs on scheduled builds
+
+### Triggering Azure Tests
+
+Azure tests only run in the following scenarios:
+
+- **Scheduled builds**: Nightly at 2 AM UTC
+- **Pull requests**: Add the `test-azure` label
+- **Commits**: Include `[test-azure]` in commit message
+
+To run Azure tests locally, ensure you have:
+```bash
+# Azure CLI authentication
+az login
+
+# Required environment variables
+export ARM_CLIENT_ID="your-client-id"
+export ARM_CLIENT_SECRET="your-client-secret"
+export ARM_TENANT_ID="your-tenant-id" 
+export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+
+# Run tests
+go test -v ./test/ -timeout 30m
+```
+
+For more testing details, see [test/README.md](./test/README.md).
+
 ## Security Considerations
 
 1. HTTPS-only web app

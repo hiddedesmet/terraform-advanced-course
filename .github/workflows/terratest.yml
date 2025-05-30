@@ -64,12 +64,16 @@ jobs:
       run: |
         go test -v ./test/ -run "TestTerraformValidation|TestNamingConventions" -timeout 10m
 
-  # Module tests that require Azure credentials
+  # Module tests that require Azure credentials - only run when explicitly requested
   module-tests:
-    name: Module Tests
+    name: Module Tests (Azure Required)
     runs-on: ubuntu-latest
     needs: validation
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'test-azure')
+    # Only run when:
+    # 1. Scheduled (nightly)
+    # 2. PR has 'test-azure' label
+    # 3. Commit message contains '[test-azure]'
+    if: github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'test-azure') || contains(github.event.head_commit.message, '[test-azure]')
     
     steps:
     - uses: actions/checkout@v4
