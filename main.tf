@@ -70,6 +70,7 @@ resource "azurerm_resource_group" "rg" {
 module "network" {
   source = "./modules/network"
 
+  subscription_id         = var.subscription_id
   resource_group_name     = azurerm_resource_group.rg.name
   location                = azurerm_resource_group.rg.location
   virtual_network_name    = var.virtual_network_name
@@ -83,6 +84,7 @@ module "network" {
 module "storage" {
   source = "./modules/storage"
 
+  subscription_id          = var.subscription_id
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   storage_account_name     = var.storage_account_name
@@ -96,6 +98,7 @@ module "storage" {
 module "webapp" {
   source = "./modules/webapp"
 
+  subscription_id       = var.subscription_id
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
   app_service_plan_name = var.app_service_plan_name
@@ -113,7 +116,8 @@ module "webapp" {
 
 module "keyvault" {
   source = "./modules/keyvault"
-
+  
+  subscription_id            = var.subscription_id
   resource_group_name        = azurerm_resource_group.rg.name
   location                   = azurerm_resource_group.rg.location
   key_vault_name             = var.key_vault_name

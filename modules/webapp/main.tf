@@ -12,10 +12,17 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+# Create resource group for the webapp resources
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
+  tags     = var.tags
+}
+
 resource "azurerm_service_plan" "app_service_plan" {
   name                = var.app_service_plan_name
-  resource_group_name = var.resource_group_name
-  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   os_type             = var.os_type
   sku_name            = var.sku_name
 
@@ -24,7 +31,7 @@ resource "azurerm_service_plan" "app_service_plan" {
 
 resource "azurerm_linux_web_app" "web_app" {
   name                = var.web_app_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_service_plan.app_service_plan.location
   service_plan_id     = azurerm_service_plan.app_service_plan.id
   https_only          = var.https_only
