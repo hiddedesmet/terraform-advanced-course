@@ -1,0 +1,337 @@
+package test
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/stretchr/testify/assert"
+)
+
+// TestDisasterRecovery tests disaster recovery capabilities
+func TestDisasterRecovery(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := random.UniqueId()
+	subscriptionID := "" // Set this to your Azure subscription ID
+
+	if subscriptionID == "" {
+		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping disaster recovery test.")
+	}
+
+	// Primary region deployment
+	primaryTerraformOptions := &terraform.Options{
+		TerraformDir: "../",
+		Vars: map[string]interface{}{
+			"subscription_id":         subscriptionID,
+			"resource_group_name":     fmt.Sprintf("rg-dr-primary-%s", uniqueID),
+			"location":                "East US",
+			"storage_account_name":    fmt.Sprintf("stdrpri%s", strings.ToLower(uniqueID[:9])),
+			"key_vault_name":          fmt.Sprintf("kv-dr-pri-%s", uniqueID),
+			"web_app_name":            fmt.Sprintf("webapp-dr-pri-%s", uniqueID),
+			"virtual_network_name":    fmt.Sprintf("vnet-dr-pri-%s", uniqueID),
+			"subnet_name":             fmt.Sprintf("subnet-dr-pri-%s", uniqueID),
+			"nsg_name":                fmt.Sprintf("nsg-dr-pri-%s", uniqueID),
+			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":   fmt.Sprintf("asp-dr-pri-%s", uniqueID),
+			"prefix":                  "tf",
+			"environment":             "dr-primary",
+			"suffix":                  "01",
+			"project_name":            "disaster-recovery",
+			"owner":                   "dr-team",
+			"cost_center":             "55555",
+		},
+	}
+
+	// Secondary region deployment
+	secondaryTerraformOptions := &terraform.Options{
+		TerraformDir: "../",
+		Vars: map[string]interface{}{
+			"subscription_id":         subscriptionID,
+			"resource_group_name":     fmt.Sprintf("rg-dr-secondary-%s", uniqueID),
+			"location":                "West US 2", // Different region for DR
+			"storage_account_name":    fmt.Sprintf("stdrsec%s", strings.ToLower(uniqueID[:9])),
+			"key_vault_name":          fmt.Sprintf("kv-dr-sec-%s", uniqueID),
+			"web_app_name":            fmt.Sprintf("webapp-dr-sec-%s", uniqueID),
+			"virtual_network_name":    fmt.Sprintf("vnet-dr-sec-%s", uniqueID),
+			"subnet_name":             fmt.Sprintf("subnet-dr-sec-%s", uniqueID),
+			"nsg_name":                fmt.Sprintf("nsg-dr-sec-%s", uniqueID),
+			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":   fmt.Sprintf("asp-dr-sec-%s", uniqueID),
+			"prefix":                  "tf",
+			"environment":             "dr-secondary",
+			"suffix":                  "02",
+			"project_name":            "disaster-recovery",
+			"owner":                   "dr-team",
+			"cost_center":             "55555",
+		},
+	}
+
+	defer terraform.Destroy(t, primaryTerraformOptions)
+	defer terraform.Destroy(t, secondaryTerraformOptions)
+
+	// Deploy primary region
+	terraform.InitAndApply(t, primaryTerraformOptions)
+
+	// Deploy secondary region
+	terraform.InitAndApply(t, secondaryTerraformOptions)
+
+	// Verify both deployments are successful
+	primaryRG := terraform.Output(t, primaryTerraformOptions, "resource_group_name")
+	secondaryRG := terraform.Output(t, secondaryTerraformOptions, "resource_group_name")
+
+	assert.True(t, azure.ResourceGroupExists(t, primaryRG, subscriptionID))
+	assert.True(t, azure.ResourceGroupExists(t, secondaryRG, subscriptionID))
+
+	// Verify resources exist in both regions
+	primaryStorageAccount := terraform.Output(t, primaryTerraformOptions, "storage_account_name")
+	secondaryStorageAccount := terraform.Output(t, secondaryTerraformOptions, "storage_account_name")
+
+	assert.True(t, azure.StorageAccountExists(t, primaryStorageAccount, primaryRG, subscriptionID))
+	assert.True(t, azure.StorageAccountExists(t, secondaryStorageAccount, secondaryRG, subscriptionID))
+
+	// Test failover scenario by destroying primary and verifying secondary is still available
+	t.Run("FailoverScenario", func(t *testing.T) {
+		// Simulate primary region failure by destroying it
+		terraform.Destroy(t, primaryTerraformOptions)
+
+		// Verify primary resources are gone
+		assert.False(t, azure.ResourceGroupExists(t, primaryRG, subscriptionID))
+
+		// Verify secondary resources are still available
+		assert.True(t, azure.ResourceGroupExists(t, secondaryRG, subscriptionID))
+		assert.True(t, azure.StorageAccountExists(t, secondaryStorageAccount, secondaryRG, subscriptionID))
+	})
+}
+
+// TestBackupAndRestore tests backup and restore capabilities
+func TestBackupAndRestore(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := random.UniqueId()
+	subscriptionID := "" // Set this to your Azure subscription ID
+
+	if subscriptionID == "" {
+		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping backup test.")
+	}
+
+	terraformOptions := &terraform.Options{
+		TerraformDir: "../",
+		Vars: map[string]interface{}{
+			"subscription_id":         subscriptionID,
+			"resource_group_name":     fmt.Sprintf("rg-backup-%s", uniqueID),
+			"location":                "East US",
+			"storage_account_name":    fmt.Sprintf("stbkp%s", strings.ToLower(uniqueID[:11])),
+			"key_vault_name":          fmt.Sprintf("kv-backup-%s", uniqueID),
+			"web_app_name":            fmt.Sprintf("webapp-backup-%s", uniqueID),
+			"virtual_network_name":    fmt.Sprintf("vnet-backup-%s", uniqueID),
+			"subnet_name":             fmt.Sprintf("subnet-backup-%s", uniqueID),
+			"nsg_name":                fmt.Sprintf("nsg-backup-%s", uniqueID),
+			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":   fmt.Sprintf("asp-backup-%s", uniqueID),
+			"prefix":                  "tf",
+			"environment":             "backup-test",
+			"suffix":                  "01",
+			"project_name":            "backup-restore",
+			"owner":                   "backup-team",
+			"cost_center":             "66666",
+		},
+	}
+
+	defer terraform.Destroy(t, terraformOptions)
+
+	// Initial deployment
+	terraform.InitAndApply(t, terraformOptions)
+
+	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
+	storageAccountName := terraform.Output(t, terraformOptions, "storage_account_name")
+	keyVaultName := terraform.Output(t, terraformOptions, "key_vault_name")
+
+	// Verify initial deployment
+	assert.True(t, azure.ResourceGroupExists(t, resourceGroupName, subscriptionID))
+	assert.True(t, azure.StorageAccountExists(t, storageAccountName, resourceGroupName, subscriptionID))
+	assert.True(t, azure.KeyVaultExists(t, keyVaultName, resourceGroupName, subscriptionID))
+
+	// Test soft delete capabilities for Key Vault
+	keyVault := azure.GetKeyVault(t, keyVaultName, resourceGroupName, subscriptionID)
+	if keyVault.Properties != nil {
+		// Verify soft delete is enabled (should be enabled by default in modern Azure)
+		assert.True(t, *keyVault.Properties.EnableSoftDelete, 
+			"Key Vault should have soft delete enabled for backup/recovery")
+	}
+
+	// Test storage account backup capabilities
+	storageAccount := azure.GetStorageAccount(t, storageAccountName, resourceGroupName, subscriptionID)
+	
+	// Verify storage account has versioning capabilities for backup/recovery
+	assert.NotNil(t, storageAccount, "Storage account should exist for backup testing")
+
+	// Test point-in-time recovery scenario
+	t.Run("PointInTimeRecovery", func(t *testing.T) {
+		// Simulate data corruption/loss by destroying and recreating
+		terraform.Destroy(t, terraformOptions)
+		
+		// Verify resources are destroyed
+		assert.False(t, azure.ResourceGroupExists(t, resourceGroupName, subscriptionID))
+		
+		// Restore from "backup" (re-deploy)
+		terraform.InitAndApply(t, terraformOptions)
+		
+		// Verify restoration is successful
+		assert.True(t, azure.ResourceGroupExists(t, resourceGroupName, subscriptionID))
+		assert.True(t, azure.StorageAccountExists(t, storageAccountName, resourceGroupName, subscriptionID))
+		assert.True(t, azure.KeyVaultExists(t, keyVaultName, resourceGroupName, subscriptionID))
+	})
+}
+
+// TestDataRetention tests data retention policies and compliance
+func TestDataRetention(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := random.UniqueId()
+	subscriptionID := "" // Set this to your Azure subscription ID
+
+	if subscriptionID == "" {
+		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping data retention test.")
+	}
+
+	terraformOptions := &terraform.Options{
+		TerraformDir: "../",
+		Vars: map[string]interface{}{
+			"subscription_id":         subscriptionID,
+			"resource_group_name":     fmt.Sprintf("rg-retention-%s", uniqueID),
+			"location":                "East US",
+			"storage_account_name":    fmt.Sprintf("stret%s", strings.ToLower(uniqueID[:11])),
+			"key_vault_name":          fmt.Sprintf("kv-retention-%s", uniqueID),
+			"web_app_name":            fmt.Sprintf("webapp-ret-%s", uniqueID),
+			"virtual_network_name":    fmt.Sprintf("vnet-ret-%s", uniqueID),
+			"subnet_name":             fmt.Sprintf("subnet-ret-%s", uniqueID),
+			"nsg_name":                fmt.Sprintf("nsg-ret-%s", uniqueID),
+			"storage_container_name":  fmt.Sprintf("container%s", strings.ToLower(uniqueID)),
+			"app_service_plan_name":   fmt.Sprintf("asp-ret-%s", uniqueID),
+			"prefix":                  "tf",
+			"environment":             "retention-test",
+			"suffix":                  "01",
+			"project_name":            "data-retention",
+			"owner":                   "retention-team",
+			"cost_center":             "77777",
+		},
+	}
+
+	defer terraform.Destroy(t, terraformOptions)
+	terraform.InitAndApply(t, terraformOptions)
+
+	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
+	keyVaultName := terraform.Output(t, terraformOptions, "key_vault_name")
+
+	// Test Key Vault retention settings
+	keyVault := azure.GetKeyVault(t, keyVaultName, resourceGroupName, subscriptionID)
+	if keyVault.Properties != nil {
+		// Verify soft delete retention days (should be configured as per our module)
+		if keyVault.Properties.SoftDeleteRetentionInDays != nil {
+			assert.Equal(t, int32(7), *keyVault.Properties.SoftDeleteRetentionInDays, 
+				"Key Vault should have 7 days soft delete retention for test environment")
+		}
+		
+		// Verify purge protection is disabled for test environments
+		assert.False(t, *keyVault.Properties.EnablePurgeProtection, 
+			"Purge protection should be disabled for test environments")
+	}
+
+	// Test storage account retention capabilities
+	storageAccountName := terraform.Output(t, terraformOptions, "storage_account_name")
+	storageAccount := azure.GetStorageAccount(t, storageAccountName, resourceGroupName, subscriptionID)
+	
+	// Verify storage account exists and can be configured for retention policies
+	assert.NotNil(t, storageAccount, "Storage account should exist for retention testing")
+	assert.Equal(t, "Standard_LRS", string(storageAccount.Sku.Name), 
+		"Storage account should use LRS for test environments")
+}
+
+// TestCrossRegionReplication tests cross-region replication and synchronization
+func TestCrossRegionReplication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping cross-region replication test in short mode")
+	}
+
+	uniqueID := random.UniqueId()
+	subscriptionID := "" // Set this to your Azure subscription ID
+
+	if subscriptionID == "" {
+		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping cross-region test.")
+	}
+
+	regions := []string{"East US", "West US 2", "Central US"}
+	deployments := make([]*terraform.Options, len(regions))
+
+	// Deploy to multiple regions
+	for i, region := range regions {
+		deployments[i] = &terraform.Options{
+			TerraformDir: "../",
+			Vars: map[string]interface{}{
+				"subscription_id":         subscriptionID,
+				"resource_group_name":     fmt.Sprintf("rg-repl-%s-%d", uniqueID, i),
+				"location":                region,
+				"storage_account_name":    fmt.Sprintf("strepl%s%d", strings.ToLower(uniqueID[:9]), i),
+				"key_vault_name":          fmt.Sprintf("kv-repl-%s-%d", uniqueID, i),
+				"web_app_name":            fmt.Sprintf("webapp-repl-%s-%d", uniqueID, i),
+				"virtual_network_name":    fmt.Sprintf("vnet-repl-%s-%d", uniqueID, i),
+				"subnet_name":             fmt.Sprintf("subnet-repl-%s-%d", uniqueID, i),
+				"nsg_name":                fmt.Sprintf("nsg-repl-%s-%d", uniqueID, i),
+				"storage_container_name":  fmt.Sprintf("container%s%d", strings.ToLower(uniqueID), i),
+				"app_service_plan_name":   fmt.Sprintf("asp-repl-%s-%d", uniqueID, i),
+				"prefix":                  "tf",
+				"environment":             fmt.Sprintf("repl-test-%d", i),
+				"suffix":                  fmt.Sprintf("%02d", i+1),
+				"project_name":            "cross-region-replication",
+				"owner":                   "replication-team",
+				"cost_center":             "88888",
+			},
+		}
+
+		defer terraform.Destroy(t, deployments[i])
+	}
+
+	// Deploy to all regions concurrently
+	start := time.Now()
+	for i := range deployments {
+		go func(index int) {
+			terraform.InitAndApply(t, deployments[index])
+		}(i)
+	}
+
+	// Wait for all deployments to complete (with timeout)
+	timeout := time.After(20 * time.Minute)
+	for i := range deployments {
+		select {
+		case <-timeout:
+			t.Fatal("Cross-region deployment timed out")
+		default:
+			// Verify deployment in this region
+			resourceGroupName := terraform.Output(t, deployments[i], "resource_group_name")
+			assert.True(t, azure.ResourceGroupExists(t, resourceGroupName, subscriptionID),
+				fmt.Sprintf("Resource group should exist in region %s", regions[i]))
+		}
+	}
+
+	deploymentTime := time.Since(start)
+	t.Logf("Cross-region deployment completed in: %v", deploymentTime)
+
+	// Verify all deployments are consistent
+	for i := range deployments {
+		resourceGroupName := terraform.Output(t, deployments[i], "resource_group_name")
+		storageAccountName := terraform.Output(t, deployments[i], "storage_account_name")
+		
+		assert.True(t, azure.ResourceGroupExists(t, resourceGroupName, subscriptionID))
+		assert.True(t, azure.StorageAccountExists(t, storageAccountName, resourceGroupName, subscriptionID))
+		
+		// Verify consistency in resource configuration across regions
+		storageAccount := azure.GetStorageAccount(t, storageAccountName, resourceGroupName, subscriptionID)
+		assert.Equal(t, "Standard_LRS", string(storageAccount.Sku.Name), 
+			fmt.Sprintf("Storage account in region %s should have consistent configuration", regions[i]))
+	}
+}

@@ -1,0 +1,147 @@
+# Terratest Makefile for Terraform Advanced Course
+
+.PHONY: help test test-validation test-modules test-infrastructure test-security test-performance test-dr test-all clean deps fmt
+
+# Default target
+help:
+	@echo "Available targets:"
+	@echo "  deps                    - Install dependencies"
+	@echo "  fmt                     - Format Go code"
+	@echo "  test-validation         - Run validation tests (no Azure required)"
+	@echo "  test-modules            - Run module tests"
+	@echo "  test-infrastructure     - Run infrastructure tests"
+	@echo "  test-security           - Run security tests"
+	@echo "  test-performance        - Run performance tests"
+	@echo "  test-dr                 - Run disaster recovery tests"
+	@echo "  test-all                - Run all tests"
+	@echo "  test-short              - Run all tests in short mode"
+	@echo "  clean                   - Clean up test resources"
+	@echo "  help                    - Show this help message"
+
+# Install dependencies
+deps:
+	@echo "Installing Go dependencies..."
+	go mod download
+	go mod tidy
+	@echo "Dependencies installed successfully"
+
+# Format Go code
+fmt:
+	@echo "Formatting Go code..."
+	go fmt ./test/...
+	@echo "Code formatted successfully"
+
+# Run validation tests (no Azure required)
+test-validation:
+	@echo "Running validation tests..."
+	go test -v ./test/ -run "TestTerraformValidation|TestNamingConventions|TestValidationModule"
+
+# Run module tests
+test-modules:
+	@echo "Running module tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Tests will be skipped."; \
+	fi
+	go test -v ./test/ -run "TestNetworkModule|TestStorageModule|TestWebAppModule|TestKeyVaultModule|TestTaggingModule|TestModulesIntegration"
+
+# Run infrastructure tests
+test-infrastructure:
+	@echo "Running infrastructure tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Tests will be skipped."; \
+	fi
+	go test -v ./test/ -run "TestTerraformAdvancedInfrastructure|TestTerraformInfrastructureWithDifferentEnvironments" -timeout 30m
+
+# Run security tests
+test-security:
+	@echo "Running security tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Tests will be skipped."; \
+	fi
+	go test -v ./test/ -run "TestSecurityCompliance|TestDataEncryption|TestAccessControl|TestComplianceTags" -timeout 20m
+
+# Run performance tests
+test-performance:
+	@echo "Running performance tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Tests will be skipped."; \
+	fi
+	go test -v ./test/ -run "TestPerformanceBenchmarks|TestScalabilityLimits|TestResourceLimits|TestConcurrentDeployments" -timeout 45m
+
+# Run disaster recovery tests
+test-dr:
+	@echo "Running disaster recovery tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Tests will be skipped."; \
+	fi
+	go test -v ./test/ -run "TestDisasterRecovery|TestBackupAndRestore|TestDataRetention|TestCrossRegionReplication" -timeout 60m
+
+# Run all tests
+test-all: deps fmt
+	@echo "Running all tests..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Many tests will be skipped."; \
+	fi
+	go test -v ./test/... -timeout 90m
+
+# Run all tests in short mode (skips long-running tests)
+test-short: deps fmt
+	@echo "Running tests in short mode..."
+	go test -v -short ./test/... -timeout 30m
+
+# Run the complete test suite
+test-suite: deps fmt
+	@echo "Running complete test suite..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Many tests will be skipped."; \
+	fi
+	go test -v ./test/ -run TestTerraformTestSuite -timeout 120m
+
+# Clean up test resources (use with caution!)
+clean:
+	@echo "Cleaning up test resources..."
+	@echo "This will attempt to delete all resource groups matching test patterns"
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	@if command -v az >/dev/null 2>&1; then \
+		echo "Listing test resource groups..."; \
+		az group list --query "[?starts_with(name, 'rg-test-') || starts_with(name, 'rg-perf-') || starts_with(name, 'rg-security-') || starts_with(name, 'rg-dr-') || starts_with(name, 'rg-backup-') || starts_with(name, 'rg-retention-') || starts_with(name, 'rg-scale-') || starts_with(name, 'rg-limits-') || starts_with(name, 'rg-concurrent-') || starts_with(name, 'rg-repl-') || starts_with(name, 'rg-network-test-') || starts_with(name, 'rg-storage-test-') || starts_with(name, 'rg-webapp-test-') || starts_with(name, 'rg-kv-test-') || starts_with(name, 'rg-compliance-') || starts_with(name, 'rg-access-test-') || starts_with(name, 'rg-encryption-test-')].name" -o table; \
+		echo "Deleting test resource groups (this may take a while)..."; \
+		az group list --query "[?starts_with(name, 'rg-test-') || starts_with(name, 'rg-perf-') || starts_with(name, 'rg-security-') || starts_with(name, 'rg-dr-') || starts_with(name, 'rg-backup-') || starts_with(name, 'rg-retention-') || starts_with(name, 'rg-scale-') || starts_with(name, 'rg-limits-') || starts_with(name, 'rg-concurrent-') || starts_with(name, 'rg-repl-') || starts_with(name, 'rg-network-test-') || starts_with(name, 'rg-storage-test-') || starts_with(name, 'rg-webapp-test-') || starts_with(name, 'rg-kv-test-') || starts_with(name, 'rg-compliance-') || starts_with(name, 'rg-access-test-') || starts_with(name, 'rg-encryption-test-')].name" -o tsv | xargs -I {} az group delete --name {} --yes --no-wait; \
+		echo "Cleanup initiated. Resources will be deleted in the background."; \
+	else \
+		echo "Azure CLI not found. Cannot clean up resources automatically."; \
+	fi
+
+# Check prerequisites
+check-prereqs:
+	@echo "Checking prerequisites..."
+	@command -v go >/dev/null 2>&1 || { echo "Go is required but not installed. Aborting." >&2; exit 1; }
+	@command -v terraform >/dev/null 2>&1 || { echo "Terraform is required but not installed. Aborting." >&2; exit 1; }
+	@command -v az >/dev/null 2>&1 || { echo "Azure CLI is required but not installed. Aborting." >&2; exit 1; }
+	@echo "Prerequisites check passed"
+
+# Show environment information
+env-info:
+	@echo "Environment Information:"
+	@echo "Go version: $$(go version)"
+	@echo "Terraform version: $$(terraform version | head -n1)"
+	@echo "Azure CLI version: $$(az version --query '"azure-cli"' -o tsv 2>/dev/null || echo 'Not available')"
+	@echo "Azure Subscription ID: $${AZURE_SUBSCRIPTION_ID:-'Not set'}"
+	@echo "Current Azure Account: $$(az account show --query 'name' -o tsv 2>/dev/null || echo 'Not logged in')"
+
+# Run specific test by name
+test-run:
+	@if [ -z "$(TEST)" ]; then \
+		echo "Usage: make test-run TEST=TestName"; \
+		exit 1; \
+	fi
+	@echo "Running test: $(TEST)"
+	go test -v ./test/ -run "$(TEST)" -timeout 30m
+
+# Parallel test execution
+test-parallel:
+	@echo "Running tests in parallel..."
+	@if [ -z "$$AZURE_SUBSCRIPTION_ID" ]; then \
+		echo "Warning: AZURE_SUBSCRIPTION_ID not set. Many tests will be skipped."; \
+	fi
+	go test -v ./test/... -parallel 4 -timeout 60m
