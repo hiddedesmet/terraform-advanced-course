@@ -8,12 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Makefile Integration**: Added comprehensive Makefile for standardized test execution and development workflows
-  - Targets for all test categories with proper timeouts and warnings
-  - Development helper targets for setup, formatting, and linting
-  - CI/CD integration targets for automated pipeline execution
+- **Advanced Infrastructure Visualization**: Automated architecture diagram generation
+  - Python script for real-time diagram generation from Terraform code
+  - Integration with CI/CD for diagram updates on infrastructure changes
+  - Multi-format output support (PNG, SVG, PDF)
+- **Cost Estimation System**: Comprehensive cost management framework
+  - Monthly cost projections for all resources
+  - Cost optimization recommendations with potential savings
+  - Historical cost tracking and visualization
+  - HTML reports for easy analysis
+- **Infrastructure Drift Detection**: Automated detection and remediation
+  - Script for detecting differences between Terraform state and actual infrastructure
+  - Detailed drift reports with visualization
+  - Notification system for detected drift
+  - Structured remediation process
+- **Policy as Code**: OPA-based policy enforcement
+  - Tagging policy validation
+  - Security best practices enforcement
+  - Naming convention validation
+  - Cost control policies
+- **Advanced Documentation**: Comprehensive documentation framework
+  - Architecture Decision Records (ADRs)
+  - Enhanced module documentation with examples and diagrams
+  - Policy documentation and compliance guidance
+  - Cost optimization guides
+- **Pre-commit Hooks**: Code quality enforcement
+  - Terraform formatting and validation
+  - Documentation generation
+  - Security scanning
+  - Policy validation
 
 ### Enhanced
+- **Module Structure**: Improved module organization and interface clarity
+- **Variable Validation**: Comprehensive validation for all input variables
+  - European region validation for location variables
+  - Enforced naming patterns and character restrictions
+  - Resource-specific validation rules based on Azure constraints
 - **GitHub Actions Integration**: Updated CI/CD workflows to include comprehensive testing
   - Terratest execution in pull request validation workflow
   - Enhanced deployment workflow with pre-deployment testing

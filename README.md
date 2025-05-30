@@ -8,6 +8,8 @@ This project deploys the following resources:
 - App Service Plan and Linux Web App
 - Key Vault
 
+For detailed architecture diagrams, see the [diagrams documentation](./docs/diagrams/README.md).
+
 ## Modules
 
 The code is organized into the following modules:
@@ -17,6 +19,10 @@ The code is organized into the following modules:
 - **WebApp**: App Service Plan and Linux Web App
 - **KeyVault**: Key Vault
 - **Naming**: Resource naming convention
+- **Tagging**: Consistent resource tagging
+- **Validation**: Input validation rules
+
+Each module has its own detailed README with usage examples.
 
 ## Directory Structure
 
@@ -36,6 +42,11 @@ terraform-advanced-course/
 │       ├── terraform-deploy.yml           # Main deployment workflow
 │       ├── terraform-pr-validation.yml    # PR validation workflow
 │       └── README.md        # Workflow documentation
+├── docs/                    # Project documentation
+│   ├── adr/                 # Architecture Decision Records
+│   ├── diagrams/            # Architecture diagrams
+│   ├── MODULE_README_TEMPLATE.md  # Template for module documentation
+│   └── PRE_COMMIT_HOOKS.md  # Guide for pre-commit hooks
 └── modules/                 # Terraform modules
     ├── keyvault/            # Key Vault module
     │   ├── main.tf
@@ -180,3 +191,75 @@ terraform destroy -var-file=environments/dev.tfvars
 3. Add monitoring and diagnostics settings
 4. Implement backup policies
 5. Consider using Azure Policy for governance
+
+## Documentation
+
+This project includes comprehensive documentation:
+
+- **[Architecture Decision Records](./docs/adr/README.md)**: Documents significant architectural decisions
+- **[Architecture Diagrams](./docs/diagrams/README.md)**: Visual representations of the infrastructure
+- **[Pre-commit Hooks Guide](./docs/PRE_COMMIT_HOOKS.md)**: How to use the pre-commit hooks
+- **[Module Documentation](./docs/MODULE_README_TEMPLATE.md)**: Template for module documentation
+- **[Upgrade Guide](./UPGRADE_GUIDE.md)**: Instructions for upgrading between versions
+
+## Best Practices
+
+This project follows these best practices:
+
+1. **Modular Structure**: Resources are organized into logical, reusable modules
+2. **Standardized Naming**: Consistent naming conventions across all resources
+3. **Input Validation**: Validation of input variables to catch errors early
+4. **Documentation**: Comprehensive documentation for all modules and components
+5. **Code Quality**: Enforced through pre-commit hooks and automated tests
+6. **Environment Separation**: Different configurations for development and production
+7. **State Management**: Remote state with proper locking and encryption
+8. **CI/CD Integration**: Automated testing and deployment workflows
+
+For more information on contributing to this project, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Advanced Features
+
+This project implements several advanced features that make it stand out:
+
+### 1. Automated Infrastructure Visualization
+
+Our project automatically generates architecture diagrams from the Terraform code, ensuring documentation is always up-to-date with the actual infrastructure. See [Architecture Diagrams](./docs/diagrams/README.md).
+
+### 2. Cost Estimation and Optimization
+
+We've implemented automated cost estimation that provides:
+- Monthly cost projections for all environments
+- Cost optimization recommendations
+- Historical cost tracking
+
+See [Cost Management Documentation](./docs/costs/README.md) for details.
+
+### 3. Infrastructure Drift Detection
+
+Our advanced drift detection system automatically identifies differences between Terraform state and actual infrastructure, helping prevent configuration drift and ensure infrastructure integrity. See [Drift Detection](./docs/drift/README.md).
+
+### 4. Policy as Code
+
+We enforce organizational standards and security best practices using Open Policy Agent (OPA) policies:
+- Security requirements
+- Resource tagging standards
+- Naming conventions
+- Cost controls
+
+See [Policy Documentation](./policies/README.md) for details.
+
+### 5. Comprehensive Documentation
+
+We maintain extensive documentation:
+- Architecture Decision Records
+- Module usage examples
+- Architecture diagrams
+- Cost and optimization guidance
+
+### 6. DevOps Integration
+
+The project is fully integrated with modern DevOps practices:
+- Pre-commit hooks for code quality
+- Comprehensive CI/CD pipelines
+- Automated testing
+- Drift detection in CI/CD
