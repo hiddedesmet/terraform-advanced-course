@@ -224,6 +224,16 @@ go test -v ./test/ -timeout 30m
 
 For more testing details, see [test/README.md](./test/README.md).
 
+### Running the Complete Test Flow
+
+To run the full test pipeline (validation → modules → infrastructure → security → performance):
+
+1. **Manual Workflow Dispatch**: Go to GitHub Actions → Terratest CI/CD → Run workflow → Select "all-tests"
+2. **Commit Trigger**: Include `[test-azure]` in commit message
+3. **Scheduled**: Runs automatically nightly at 2 AM UTC
+
+For detailed instructions on running the complete test flow, see [docs/TEST_EXECUTION_GUIDE.md](./docs/TEST_EXECUTION_GUIDE.md).
+
 ## Security Considerations
 
 1. HTTPS-only web app
