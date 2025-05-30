@@ -231,13 +231,19 @@ func TestComplianceTags(t *testing.T) {
 		t.Skip("AZURE_SUBSCRIPTION_ID environment variable not set. Skipping compliance test.")
 	}
 
+	// Make sure uniqueID is safe for use in storage account names
+	safeID := strings.ToLower(uniqueID)
+	if len(safeID) > 8 {
+		safeID = safeID[:8] // Keep it shorter to avoid exceeding Azure storage name limits
+	}
+
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../",
 		Vars: map[string]interface{}{
 			"subscription_id":        subscriptionID,
 			"resource_group_name":    fmt.Sprintf("rg-compliance-%s", uniqueID),
 			"location":               "westeurope",
-			"storage_account_name":   fmt.Sprintf("stcomp%s", strings.ToLower(uniqueID[:9])),
+			"storage_account_name":   fmt.Sprintf("stcomp%s", safeID),
 			"key_vault_name":         fmt.Sprintf("kv-comp-%s", uniqueID),
 			"web_app_name":           fmt.Sprintf("webapp-comp-%s", uniqueID),
 			"virtual_network_name":   fmt.Sprintf("vnet-comp-%s", uniqueID),
